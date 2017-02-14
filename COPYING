@@ -1,0 +1,21 @@
+CyclicDB is distributed under GNU licences.
+
+Libraries are licenced on GNU Lesser General Public License (LGPL), version 2.1
+or (at your option) any later version.
+See "LICENSE-LGPL2.1" in the root of this distribution.
+
+Executables and tests are licenced on GNU General Public License (GPL),
+version 2 or (at your option) any later version.
+See "LICENSE-GPL2" in the root of this distribution.
+
+Examples are distributed in the public domain worldwide, along the
+Creative Commons CC0 Public Domain Dedication.
+See "COPYING" file in examples directory.
+
+CyclicDB is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License and GNU Lesser General Public License for
+more details.
+
+
