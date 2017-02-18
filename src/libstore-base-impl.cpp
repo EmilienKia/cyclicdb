@@ -610,6 +610,10 @@ std::unique_ptr<record> base_table_impl::get_record(record_index_t index)const
     {
         raw_record* rec = new raw_record{get_record_at_position(pos)};
         rec->index(index);
+        if(_duration!=0)
+        {
+            rec->time(record_time(index));
+        }
         rec->attach(this);
         return std::unique_ptr<record>{rec};
     }

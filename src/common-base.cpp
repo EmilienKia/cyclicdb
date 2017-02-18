@@ -27,9 +27,10 @@ namespace cyclic
 // raw_record
 //
 
-raw_record::raw_record(const cyclic::recordset* recordset, record_index_t record) :
+raw_record::raw_record(const cyclic::recordset* recordset, record_index_t record, record_time_t time) :
 _recordset(recordset),
 _index(record),
+_time(time),
 _values(recordset->field_count())
 {
 }
@@ -37,13 +38,15 @@ _values(recordset->field_count())
 raw_record::raw_record(const raw_record& rec):
 _recordset(rec._recordset),
 _index(rec._index),
+_time(rec._time),
 _values(rec._values)
 {
 }
 
 raw_record::raw_record(const record& rec) :
 _recordset(rec.recordset()),
-_index(rec.index())
+_index(rec.index()),
+_time(rec.time())
 {
     _values.resize(rec.size());
     for(field_index_t f = 0; f < rec.size(); ++f)
@@ -55,6 +58,7 @@ _index(rec.index())
 raw_record::raw_record(raw_record&& rec) :
 _recordset(rec._recordset),
 _index(rec._index),
+_time(rec._time),
 _values(std::move(rec._values))
 {
 }
@@ -66,12 +70,14 @@ raw_record& raw_record::operator=(const record& rec)
     {
         _recordset = raw->_recordset;
         _index = raw->_index;
+        _time = raw->_time;
         _values = raw->_values;
     }
     else
     {
         _recordset = rec.recordset();
         _index = rec.index();
+        _time = rec.time();
         _values.resize(rec.size());
         for(field_index_t f = 0; f < rec.size(); ++f)
         {
@@ -85,6 +91,7 @@ raw_record& raw_record::operator=(const raw_record& raw)
 {
     _recordset = raw._recordset;
     _index = raw._index;
+    _time = raw._time;
     _values = raw._values;
     return *this;
 }
@@ -93,6 +100,7 @@ raw_record& raw_record::operator=(raw_record&& rec)
 {
     _recordset = rec._recordset;
     _index = rec._index;
+    _time = rec._time;
     _values = std::move(rec._values);
     return *this;
 }
@@ -114,6 +122,11 @@ record_index_t raw_record::index()const
     return _index;
 }
 
+record_time_t raw_record::time()const
+{
+    return _time;
+}
+
 bool raw_record::ok()const
 {
     return _index != invalid_index();
@@ -129,6 +142,11 @@ record& raw_record::index(index_t index)
 {
     _index = index;
     // TODO Must I do some additional checks ?
+}
+
+mutable_record& raw_record::time(time_t time)
+{
+    _time = time;
 }
 
 field_index_t raw_record::size()const

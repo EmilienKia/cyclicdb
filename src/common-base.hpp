@@ -196,6 +196,13 @@ namespace cyclic
         virtual index_t index()const =0;
 
         /**
+         * Retrieve the time of the record (time of begining of record)
+         * if time is enabled and available.
+         * @return Time of record, if available, 0 otherwise.
+         */
+        virtual time_t time()const =0;
+
+        /**
          * Test if a record if valid.
          * (typically, not empty and assign to a source dataset)
          * @return true if the record is valid.
@@ -322,6 +329,13 @@ namespace cyclic
          * @return this
          */
         virtual record& index(index_t index) =0;
+
+        /**
+         * Set the time point of the record.
+         * @param time New time of the record.
+         * @return this
+         */
+        virtual mutable_record& time(time_t time) =0;
 
         /**
          * Reset the value (set to null) of a field.
@@ -454,6 +468,7 @@ namespace cyclic
     private:
         const cyclic::recordset* _recordset = nullptr;
         index_t _index = invalid_index();
+        time_t _time = 0;
         std::vector<value_t> _values;
 
         /**
@@ -469,8 +484,9 @@ namespace cyclic
          * Create a raw record, eventually attached to a recordset.
          * @param recordset Recordset to which attach the record. Can be nullptr.
          * @param record Record index. Invalid by default.
+         * @param time Time of the record.
          */
-        raw_record(const cyclic::recordset* recordset, index_t record = invalid_index());
+        raw_record(const cyclic::recordset* recordset, index_t record = invalid_index(), time_t time = 0);
 
         /** Copy a raw record. */
         raw_record(const raw_record& rec);
@@ -495,9 +511,11 @@ namespace cyclic
 
         const cyclic::recordset* recordset()const override;
         index_t index()const override;
+        time_t time()const override;
         bool ok()const override;
         record& attach(const cyclic::recordset* recordset) override;
         record& index(index_t index) override;
+        mutable_record& time(time_t time) override;
         field_index_t size() const override;
         bool has(field_index_t field)const override;
         bool has(const std::string& field_name)const override;
@@ -782,6 +800,7 @@ namespace cyclic
         /**
          * Set record values at record index.
          * The record index must be valid.
+         * The record time is ignored.
          * @param rec Record to set, its index shall be set.
          * @throw std::invalid_argument index is invalid.
          * @throw std::logic_error set a record in an empty table.
@@ -792,7 +811,7 @@ namespace cyclic
 
         /**
          * Set record values at specified index.
-         * The index of the record object is ignored.
+         * The index and the time of the record object are ignored.
          * Usefull to clone (and modify) a record.
          * @param index Index to which store the record. Must be valid.
          * @param rec Record to store.
@@ -805,7 +824,7 @@ namespace cyclic
 
         /**
          * Set record values at specified time.
-         * The index of the record object is ignored.
+         * The index and the time of the record object are ignored.
          * @param time Time point to which store the record. Must be valid.
          * @param rec Record to store.
          * @throw std::invalid_argument index is invalid.
@@ -819,7 +838,9 @@ namespace cyclic
         /**
          * Update an existing record with values of another one.
          * Only non-null record values are applyed.
-         * @param rec Record from which update values. Record index must be valid.
+         * @param rec Record from which update values.
+         * Record index must be valid.
+         * Time of the record is ignored.
          * @throw std::invalid_argument index is invalid.
          * @throw std::logic_error update a record in an empty table.
          * @throw std::out_of_range update a record at an index out of current table range.
@@ -831,7 +852,8 @@ namespace cyclic
          * Update an existing record with values of another one.
          * Only non-null record values are applyed.
          * @param index Index of record to update. Must be valid.
-         * @param rec Record from which update values. Record index is ignored.
+         * @param rec Record from which update values.
+         * Record index and time are ignored.
          * @throw std::invalid_argument index is invalid.
          * @throw std::logic_error update a record in an empty table.
          * @throw std::out_of_range update a record at an index out of current table range.
@@ -843,7 +865,8 @@ namespace cyclic
          * Update an existing record with values of another one.
          * Only non-null record values are applyed.
          * @param time Time point to which update the record. Must be valid.
-         * @param rec Record from which update values. Record index is ignored.
+         * @param rec Record from which update values.
+         * Record index and time are ignored.
          * @throw std::invalid_argument index is invalid.
          * @throw std::logic_error update a record in an empty table.
          * @throw std::out_of_range update a record at an index out of current table range.
@@ -893,6 +916,7 @@ namespace cyclic
          * All intermediate records are set to empty (all fields to null)
          * if not immediatly after the highest record.
          * @param rec Record to append.
+         * The time of the record is ignored.
          * @throw std::out_of_range Append a record before end of table.
          * @throw cyclic::table_is_full Table is full, no more record can be append.
          */
@@ -904,7 +928,8 @@ namespace cyclic
          * not upper than highest possible index.
          * All intermediate records are set to empty (all fields to null)
          * if not immediatly after the highest record.
-         * @param rec Record to append. Its index is ignored.
+         * @param rec Record to append.
+         * The index and the time of the record are ignored.
          * @param index Index of record to insert.
          * @throw std::out_of_range Append a record before end of table.
          * @throw cyclic::table_is_full Table is full, no more record can be append.
@@ -917,7 +942,8 @@ namespace cyclic
          * not upper than highest possible time.
          * All intermediate records are set to empty (all fields to null)
          * if not immediatly after the highest record.
-         * @param rec Record to append. Its index is ignored.
+         * @param rec Record to append.
+         * The index and the time of the record are ignored.
          * @param time Time of record to append.
          * @throw std::out_of_range Append a record before end of table.
          * @throw cyclic::table_is_full Table is full, no more record can be append.
@@ -947,6 +973,7 @@ namespace cyclic
          * Insert a record (set or append) to the specified index.
          * The index must be in the range [min_index;record_index_max].
          * @param rec Record to set. Index must be valid.
+         * The time of the record is ignored.
          * @throw std::out_of_range Insert a record before begining of table.
          * @throw cyclic::table_is_full Table is full, no more record can be append.
          */
@@ -956,6 +983,7 @@ namespace cyclic
          * Insert a record (set or append) to the specified index.
          * The index must be in the range [min_index;record_index_max].
          * @param rec Record to set. Its index is ignored.
+         * The time of the record is ignored.
          * @param index Index to which set the record. Must be valid.
          * @throw std::out_of_range Insert a record before begining of table.
          * @throw cyclic::table_is_full Table is full, no more record can be append.
@@ -964,7 +992,8 @@ namespace cyclic
 
         /**
          * Insert a record (set or append) to the specified time point.
-         * @param rec Record to set. Its index is ignored.
+         * @param rec Record to set.
+         * The index and the time of the record are ignored.
          * @param time Time of record to insert.
          * @throw std::out_of_range Insert a record before begining of table.
          * @throw cyclic::table_is_full Table is full, no more record can be append.
