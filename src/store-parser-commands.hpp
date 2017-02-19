@@ -24,6 +24,7 @@
 #include "common-base.hpp"
 
 #include "store-parser-values.hpp"
+#include "store-commands.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/optional.hpp>
@@ -100,6 +101,22 @@ struct types_ : qi::symbols<char, cyclic::data_type>
 
 };
 
+inline void adapt_position_opt(helpers::position& res, boost::optional<helpers::position> opt_pos)
+{
+    if(opt_pos)
+    {
+        res = *opt_pos;
+    }
+    else
+    {
+        res = helpers::position{};
+    }
+}
+
+inline void adapt_position_index(helpers::position& res, cyclic::record_index_t index)
+{
+    res = helpers::position{index};
+}
 
 template <typename Iterator>
 struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_type>
@@ -144,25 +161,29 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
 
         values %= value % ',';
 
+        position = (ulong_)[phoenix::bind(adapt_position_index, _val, _1)];
+        at %= (no_case[lit("at")] >> position);
+//        at %= no_case[lit("at")] >> ulong_;
+        opt_at = (-(at))[phoenix::bind(adapt_position_opt, _val, _1)];
+
         insert = (    no_case[lit("insert")] >> -('(' >> column_names >> ')')
                    >> no_case[lit("values")] >>  '(' >> values >> ')'
-                   >> -( no_case[lit("at")] >> ulong_ )
+                   >> opt_at
                 )[_val = phoenix::new_<commands::insert>(_1, _2, _3)];
 
         set = (    no_case[lit("set")] >> -('(' >> column_names >> ')')
                    >> no_case[lit("values")] >>  '(' >> values >> ')'
-                   >> -( no_case[lit("at")] >> ulong_ )
+                   >> opt_at
                 )[_val = phoenix::new_<commands::set>(_1, _2, _3)];
 
         append = (    no_case[lit("append")] >> -('(' >> column_names >> ')')
                    >> no_case[lit("values")] >>  '(' >> values >> ')'
-                   >> -( no_case[lit("at")] >> ulong_ )
+                   >> opt_at
                 )[_val = phoenix::new_<commands::append>(_1, _2, _3)];
 
         reset = (    no_case[lit("reset")] >> -('(' >> column_names >> ')')
-                   >> -( no_case[lit("at")] >> ulong_ )
+                   >> opt_at
                 )[_val = phoenix::new_<commands::reset>(_1, _2)];
-
 
         query %= select | dump | status | details | create | insert | set | append | reset;
 
@@ -190,6 +211,11 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
 
     value_parser<Iterator> value;
     qi::rule<Iterator, std::vector<cyclic::value_t>(), ascii::space_type> values;
+
+//    qi::rule<Iterator, unsigned long(), ascii::space_type> at;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> position;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> at;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> opt_at;
 
     qi::rule<Iterator, commands::command*(), ascii::space_type> insert;
     qi::rule<Iterator, commands::command*(), ascii::space_type> set;

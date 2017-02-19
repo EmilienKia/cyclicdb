@@ -132,37 +132,32 @@ namespace commands
     }
 
     //
-    // query_with_colnames_and_index
+    // query_with_colnames_and_position
     //
-    query_with_colnames_and_index::query_with_colnames_and_index(
+    query_with_colnames_and_position::query_with_colnames_and_position(
             const boost::optional<std::vector<std::string>>& colnames,
-        const boost::optional<unsigned long>& index):
-    query_with_colnames(colnames)
+            const helpers::position& pos):
+    query_with_colnames(colnames),
+    _position(pos)
     {
-        if(index)
-        {
-            _index = *index;
-        }
     }
 
+    
     //
-    // query_with_colnames_values_and_index
+    // query_with_colnames_values_and_position
     //
-    query_with_colnames_values_and_index::query_with_colnames_values_and_index(
+    query_with_colnames_values_and_position::query_with_colnames_values_and_position(
         const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index):
-        query_with_colnames_and_index(colnames, index),
+        const helpers::position& pos):
+        query_with_colnames_and_position(colnames, pos),
         _values(values)
     {
     }
 
-
-
     //
     // select
     //
-
     select::select(const boost::optional<std::vector<std::string>>& colnames,
             const boost::optional<unsigned long>& start,
             const boost::optional<unsigned long>& end):
@@ -219,8 +214,8 @@ namespace commands
     //
     insert::insert(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index):
-    query_with_colnames_values_and_index(colnames, values, index)
+        const helpers::position& pos):
+    query_with_colnames_values_and_position(colnames, values, pos)
     {
     }
 
@@ -229,14 +224,27 @@ namespace commands
         if(!deduce_columns(table))
             return false;
 
-        cyclic::raw_record rec{table.get(), index()};
-
+        cyclic::raw_record rec;
         for(size_t n=0; n<_columns.size() && n<values().size(); ++n)
         {
             rec.set(_columns[n], values()[n]);
         }
 
-        table->insert_record(rec);
+        if(position().state()==helpers::position::INDEX)
+        {
+            // Specified index
+            table->insert_record(position().index(), rec);
+        }
+        else if(table->record_count()>0)
+        {
+            // Last index + 1
+            table->insert_record(table->max_index()+1, rec);
+        }
+        else
+        {
+            // First index
+            table->insert_record(cyclic::record_index_t{0}, rec);
+        }
         return true;
     }
 
@@ -245,8 +253,8 @@ namespace commands
     //
     set::set(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index):
-    query_with_colnames_values_and_index(colnames, values, index)
+        const helpers::position& pos):
+    query_with_colnames_values_and_position(colnames, values, pos)
     {
     }
 
@@ -255,14 +263,29 @@ namespace commands
         if(!deduce_columns(table))
             return false;
 
-        cyclic::raw_record rec{table.get(), index()};
-
+        cyclic::raw_record rec;
         for(size_t n=0; n<_columns.size() && n<values().size(); ++n)
         {
             rec.set(_columns[n], values()[n]);
         }
 
-        table->set_record(rec);
+        if(table->record_count()>0)
+        {
+            if(position().state()==helpers::position::INDEX)
+            {
+                // Specified index
+                table->set_record(position().index(), rec);
+            }
+            else
+            {
+                // Last index + 1
+                table->set_record(table->max_index(), rec);
+            }
+        }
+        else
+        {
+            // TODO ERROR Cannot set a record when table is empty
+        }
         return true;
     }
 
@@ -271,8 +294,8 @@ namespace commands
     //
     append::append(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index):
-    query_with_colnames_values_and_index(colnames, values, index)
+        const helpers::position& pos):
+    query_with_colnames_values_and_position(colnames, values, pos)
     {
     }
 
@@ -281,14 +304,22 @@ namespace commands
         if(!deduce_columns(table))
             return false;
 
-        cyclic::raw_record rec{table.get(), index()};
-
+        cyclic::raw_record rec;
         for(size_t n=0; n<_columns.size() && n<values().size(); ++n)
         {
             rec.set(_columns[n], values()[n]);
         }
 
-        table->append_record(rec);
+        if(position().state()==helpers::position::INDEX)
+        {
+            // Specified index
+            table->append_record(position().index(), rec);
+        }
+        else
+        {
+            // Last index + 1
+            table->append_record(cyclic::record::invalid_index(), rec);
+        }
         return true;
     }
 
@@ -296,8 +327,8 @@ namespace commands
     // reset
     //
     reset::reset(const boost::optional<std::vector<std::string>>& colnames,
-        const boost::optional<unsigned long>& index):
-    query_with_colnames_and_index(colnames, index)
+        const helpers::position& pos):
+    query_with_colnames_and_position(colnames, pos)
     {
     }
 
@@ -306,20 +337,42 @@ namespace commands
         if(!deduce_columns(table))
             return false;
 
-        std::shared_ptr<cyclic::record> r = table->get_record(index());
-        std::shared_ptr<cyclic::mutable_record> rec = std::dynamic_pointer_cast<cyclic::mutable_record>(r);
-        if(rec)
+        // TODO
+        if(table->record_count()>0)
         {
-            for(size_t n=0; n<_columns.size(); ++n)
+            cyclic::record_index_t index;
+            if(position().state()==helpers::position::INDEX)
             {
-                rec->reset(_columns[n]);
+                // Reset specified record.
+                index = position().index();
             }
-            table->set_record(*rec);
+            else
+            {
+                // Reset last record.
+                index = table->max_index();
+            }
+
+            std::shared_ptr<cyclic::record> r = table->get_record(index);
+            std::shared_ptr<cyclic::mutable_record> rec = std::dynamic_pointer_cast<cyclic::mutable_record>(r);
+            if(rec)
+            {
+                for(size_t n=0; n<_columns.size(); ++n)
+                {
+                    rec->reset(_columns[n]);
+                }
+                table->set_record(index, *rec);
+            }
+            else
+            {
+                std::cerr << "Internal error : record is not mutable, cannot reset some of its fields." << std::endl;
+            }
         }
         else
         {
-            std::cerr << "Internal error : record is not mutable, cannot reset some of its fields." << std::endl;
+            // Cannot reset an  empty table.
+            std::cerr << "Cannot reset a record in an empty table." << std::endl;
         }
+        
         return false;
     }
 

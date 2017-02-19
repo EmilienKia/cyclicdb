@@ -138,7 +138,7 @@ void CommandParsingTest::test_insert_01()
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", insert->values()[1].value<int>()==34);
     CPPUNIT_ASSERT_MESSAGE("Have correct 3rd specified value", insert->values()[2].value<int>()==56);
 
-    CPPUNIT_ASSERT_MESSAGE("Have no specified index", insert->index()==cyclic::record::invalid_index());
+    CPPUNIT_ASSERT_MESSAGE("Have no specified index", insert->position().state()==helpers::position::NONE);
 }
 
 void CommandParsingTest::test_insert_02()
@@ -161,7 +161,8 @@ void CommandParsingTest::test_insert_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", insert->values()[0].value<int>()==25);
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", insert->values()[1].value<int>()==42);
 
-    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", insert->index()==12);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", insert->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", insert->position().index()==12);
 }
 
 void CommandParsingTest::test_set_01()
@@ -183,7 +184,7 @@ void CommandParsingTest::test_set_01()
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", set->values()[1].value<int>()==34);
     CPPUNIT_ASSERT_MESSAGE("Have correct 3rd specified value", set->values()[2].value<int>()==56);
 
-    CPPUNIT_ASSERT_MESSAGE("Have no specified index", set->index()==cyclic::record::invalid_index());
+    CPPUNIT_ASSERT_MESSAGE("Have no specified index", set->position().state()==helpers::position::NONE);
 }
 
 void CommandParsingTest::test_set_02()
@@ -206,7 +207,8 @@ void CommandParsingTest::test_set_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", set->values()[0].value<int>()==25);
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", set->values()[1].value<int>()==42);
 
-    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", set->index()==12);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", set->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", set->position().index()==12);
 }
 
 
@@ -229,7 +231,7 @@ void CommandParsingTest::test_append_01()
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", append->values()[1].value<int>()==34);
     CPPUNIT_ASSERT_MESSAGE("Have correct 3rd specified value", append->values()[2].value<int>()==56);
 
-    CPPUNIT_ASSERT_MESSAGE("Have no specified index", append->index()==cyclic::record::invalid_index());
+    CPPUNIT_ASSERT_MESSAGE("Have no specified index", append->position().state()==helpers::position::NONE);
 }
 
 void CommandParsingTest::test_append_02()
@@ -252,7 +254,8 @@ void CommandParsingTest::test_append_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", append->values()[0].value<int>()==25);
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", append->values()[1].value<int>()==42);
 
-    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", append->index()==12);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", append->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", append->position().index()==12);
 }
 
 
@@ -270,7 +273,7 @@ void CommandParsingTest::test_reset_01()
 
     CPPUNIT_ASSERT_MESSAGE("Have no specified column names", reset->colnames().size()==0);
 
-    CPPUNIT_ASSERT_MESSAGE("Have no specified index", reset->index()==cyclic::record::invalid_index());
+    CPPUNIT_ASSERT_MESSAGE("Have no specified index", reset->position().state()==helpers::position::NONE);
 }
 
 void CommandParsingTest::test_reset_02()
@@ -289,5 +292,6 @@ void CommandParsingTest::test_reset_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", reset->colnames()[0]=="titi");
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", reset->colnames()[1]=="toto");
 
-    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", reset->index()==12);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", reset->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", reset->position().index()==12);
 }

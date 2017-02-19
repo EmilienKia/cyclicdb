@@ -44,6 +44,34 @@ namespace phoenix = boost::phoenix;
 namespace cyclicstore
 {
 /**
+ * Helpers for command parsing.
+ */
+namespace helpers
+{
+
+class position
+{
+public:
+    enum STATE
+    {
+        NONE,
+        INDEX
+    };
+
+protected:
+    STATE _state;
+    cyclic::record_index_t _index = cyclic::record::invalid_index();
+public:
+    position():_state(NONE){}
+    position(const position& pos):_state(pos._state),_index(pos._index){}
+    position(cyclic::record_index_t index):_state(INDEX),_index(index){}
+    
+    STATE state()const {return _state;}
+    cyclic::record_index_t index()const{return _index;}
+};
+} // namespace helpers
+
+/**
  * Command definitions for cyclicstore tool.
  */
 namespace commands
@@ -101,37 +129,38 @@ public:
 };
 
 
-class query_with_colnames_and_index : public query_with_colnames
+class query_with_colnames_and_position : public query_with_colnames
 {
 protected:
-    cyclic::record_index_t _index = cyclic::record::invalid_index();
+    helpers::position _position;
 
-    query_with_colnames_and_index() = default;
-    query_with_colnames_and_index(const boost::optional<std::vector<std::string>>& colnames,
-        const boost::optional<unsigned long>& index);
+    query_with_colnames_and_position() = default;
+    query_with_colnames_and_position(const boost::optional<std::vector<std::string>>& colnames,
+        const helpers::position& pos);
+
 public:
-    virtual ~query_with_colnames_and_index() = default;
+    virtual ~query_with_colnames_and_position() = default;
 
-    cyclic::record_index_t index()const {return _index;}
+    const helpers::position& position()const {return _position;}
 };
 
-class query_with_colnames_values_and_index : public query_with_colnames_and_index
+class query_with_colnames_values_and_position : public query_with_colnames_and_position
 {
 protected:
     std::vector<cyclic::value_t> _values;
 
-    query_with_colnames_values_and_index() = default;
-    query_with_colnames_values_and_index(const boost::optional<std::vector<std::string>>& colnames,
+    query_with_colnames_values_and_position() = default;
+    query_with_colnames_values_and_position(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index);
+        const helpers::position& pos);
 public:
-    virtual ~query_with_colnames_values_and_index() = default;
+    virtual ~query_with_colnames_values_and_position() = default;
 
     const std::vector<cyclic::value_t>& values()const {return _values;}
 };
 
 
-class insert : public query_with_colnames_values_and_index
+class insert : public query_with_colnames_values_and_position
 {
 protected:
 
@@ -140,12 +169,13 @@ protected:
 public:
     insert(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index);
+        const helpers::position& pos);
+
     virtual ~insert() = default;
     virtual bool execute(std::shared_ptr<cyclic::store::impl::file_table_impl>) override;
 };
 
-class set : public query_with_colnames_values_and_index
+class set : public query_with_colnames_values_and_position
 {
 protected:
     set() = default;
@@ -153,14 +183,14 @@ protected:
 public:
     set(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index);
+        const helpers::position& pos);
 
     virtual ~set() = default;
     virtual bool execute(std::shared_ptr<cyclic::store::impl::file_table_impl>) override;
 };
 
 
-class append : public query_with_colnames_values_and_index
+class append : public query_with_colnames_values_and_position
 {
 protected:
     append() = default;
@@ -168,27 +198,24 @@ protected:
 public:
     append(const boost::optional<std::vector<std::string>>& colnames,
         const std::vector<cyclic::value_t>& values,
-        const boost::optional<unsigned long>& index);
+        const helpers::position& pos);
 
     virtual ~append() = default;
     virtual bool execute(std::shared_ptr<cyclic::store::impl::file_table_impl>) override;
 };
 
-class reset : public query_with_colnames_and_index
+class reset : public query_with_colnames_and_position
 {
 protected:
     reset() = default;
 
 public:
     reset(const boost::optional<std::vector<std::string>>& colnames,
-        const boost::optional<unsigned long>& index);
+        const helpers::position& pos);
 
     virtual ~reset() = default;
     virtual bool execute(std::shared_ptr<cyclic::store::impl::file_table_impl>) override;
 };
-
-
-
 
 
 
