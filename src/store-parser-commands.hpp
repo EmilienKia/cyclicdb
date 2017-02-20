@@ -118,12 +118,18 @@ inline void adapt_position_index(helpers::position& res, cyclic::record_index_t 
     res = helpers::position{index};
 }
 
+inline void adapt_position_time(helpers::position& res, cyclic::record_time_t time)
+{
+    res = helpers::position{time};
+}
+
 template <typename Iterator>
 struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_type>
 {
     query_parser() : query_parser::base_type(query) {
         using qi::int_;
         using qi::ulong_;
+        using qi::long_long;
         using qi::double_;
         using ascii::char_;
         using ascii::no_case;
@@ -161,9 +167,13 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
 
         values %= value % ',';
 
-        position = (ulong_)[phoenix::bind(adapt_position_index, _val, _1)];
+        pos_index = (-(no_case[lit("index")]) >> ulong_)
+                [phoenix::bind(adapt_position_index, _val, _1)];
+        pos_time = (no_case[lit("time")] >> long_long)
+                [phoenix::bind(adapt_position_time, _val, _1)];
+        position %= pos_index | pos_time;
+        
         at %= (no_case[lit("at")] >> position);
-//        at %= no_case[lit("at")] >> ulong_;
         opt_at = (-(at))[phoenix::bind(adapt_position_opt, _val, _1)];
 
         insert = (    no_case[lit("insert")] >> -('(' >> column_names >> ')')
@@ -212,8 +222,9 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
     value_parser<Iterator> value;
     qi::rule<Iterator, std::vector<cyclic::value_t>(), ascii::space_type> values;
 
-//    qi::rule<Iterator, unsigned long(), ascii::space_type> at;
     qi::rule<Iterator, helpers::position(), ascii::space_type> position;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> pos_index;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> pos_time;
     qi::rule<Iterator, helpers::position(), ascii::space_type> at;
     qi::rule<Iterator, helpers::position(), ascii::space_type> opt_at;
 

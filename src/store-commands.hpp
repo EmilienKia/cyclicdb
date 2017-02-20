@@ -55,19 +55,23 @@ public:
     enum STATE
     {
         NONE,
-        INDEX
+        INDEX,
+        TIME
     };
 
 protected:
-    STATE _state;
+    STATE _state = NONE;
     cyclic::record_index_t _index = cyclic::record::invalid_index();
+    cyclic::record_time_t _time = 0;
 public:
     position():_state(NONE){}
-    position(const position& pos):_state(pos._state),_index(pos._index){}
+    position(const position& pos):_state(pos._state),_index(pos._index),_time(pos._time){}
     position(cyclic::record_index_t index):_state(INDEX),_index(index){}
+    position(cyclic::record_time_t time):_state(TIME),_time(time){}
     
     STATE state()const {return _state;}
     cyclic::record_index_t index()const{return _index;}
+    cyclic::record_time_t time()const{return _time;}
 };
 } // namespace helpers
 

@@ -31,15 +31,23 @@ class CommandParsingTest : public CppUnit::TestFixture {
 
         CPPUNIT_TEST(test_insert_01);
         CPPUNIT_TEST(test_insert_02);
+        CPPUNIT_TEST(test_insert_03);
+        CPPUNIT_TEST(test_insert_04);
 
         CPPUNIT_TEST(test_set_01);
         CPPUNIT_TEST(test_set_02);
+        CPPUNIT_TEST(test_set_03);
+        CPPUNIT_TEST(test_set_04);
 
         CPPUNIT_TEST(test_append_01);
         CPPUNIT_TEST(test_append_02);
+        CPPUNIT_TEST(test_append_03);
+        CPPUNIT_TEST(test_append_04);
 
         CPPUNIT_TEST(test_reset_01);
         CPPUNIT_TEST(test_reset_02);
+        CPPUNIT_TEST(test_reset_03);
+        CPPUNIT_TEST(test_reset_04);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -49,15 +57,23 @@ public:
 
     void test_insert_01();
     void test_insert_02();
+    void test_insert_03();
+    void test_insert_04();
 
     void test_set_01();
     void test_set_02();
+    void test_set_03();
+    void test_set_04();
 
     void test_append_01();
     void test_append_02();
+    void test_append_03();
+    void test_append_04();
 
     void test_reset_01();
     void test_reset_02();
+    void test_reset_03();
+    void test_reset_04();
 
     static commands::command* parse_command(const std::string& command);
 };
@@ -165,6 +181,54 @@ void CommandParsingTest::test_insert_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct specified index", insert->position().index()==12);
 }
 
+void CommandParsingTest::test_insert_03()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("insert (titi, toto) values ( 25, 42 ) at index 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::insert* insert = dynamic_cast<commands::insert*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'insert' command", insert!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", insert->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", insert->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", insert->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have correct number of specified values", insert->values().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", insert->values()[0].value<int>()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", insert->values()[1].value<int>()==42);
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", insert->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", insert->position().index()==12);
+}
+
+void CommandParsingTest::test_insert_04()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("insert (titi, toto) values ( 25, 42 ) at time 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::insert* insert = dynamic_cast<commands::insert*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'insert' command", insert!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", insert->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", insert->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", insert->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have correct number of specified values", insert->values().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", insert->values()[0].value<int>()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", insert->values()[1].value<int>()==42);
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified time", insert->position().state()==helpers::position::TIME);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified time", insert->position().time()==12);
+}
+
 void CommandParsingTest::test_set_01()
 {
     namespace qi = boost::spirit::qi;
@@ -211,6 +275,53 @@ void CommandParsingTest::test_set_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct specified index", set->position().index()==12);
 }
 
+void CommandParsingTest::test_set_03()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("set (titi, toto) values ( 25, 42 ) at index 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::set* set = dynamic_cast<commands::set*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'set' command", set!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", set->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", set->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", set->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have correct number of specified values", set->values().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", set->values()[0].value<int>()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", set->values()[1].value<int>()==42);
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", set->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", set->position().index()==12);
+}
+
+void CommandParsingTest::test_set_04()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("set (titi, toto) values ( 25, 42 ) at time 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::set* set = dynamic_cast<commands::set*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'set' command", set!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", set->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", set->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", set->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have correct number of specified values", set->values().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", set->values()[0].value<int>()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", set->values()[1].value<int>()==42);
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified time", set->position().state()==helpers::position::TIME);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified time", set->position().time()==12);
+}
 
 void CommandParsingTest::test_append_01()
 {
@@ -258,6 +369,53 @@ void CommandParsingTest::test_append_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct specified index", append->position().index()==12);
 }
 
+void CommandParsingTest::test_append_03()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("append (titi, toto) values ( 25, 42 ) at index 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::append* append = dynamic_cast<commands::append*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'append' command", append!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", append->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", append->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", append->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have correct number of specified values", append->values().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", append->values()[0].value<int>()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", append->values()[1].value<int>()==42);
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", append->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", append->position().index()==12);
+}
+
+void CommandParsingTest::test_append_04()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("append (titi, toto) values ( 25, 42 ) at time 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::append* append = dynamic_cast<commands::append*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'append' command", append!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", append->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", append->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", append->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have correct number of specified values", append->values().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st specified value", append->values()[0].value<int>()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd specified value", append->values()[1].value<int>()==42);
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified time", append->position().state()==helpers::position::TIME);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified time", append->position().time()==12);
+}
 
 void CommandParsingTest::test_reset_01()
 {
@@ -294,4 +452,44 @@ void CommandParsingTest::test_reset_02()
 
     CPPUNIT_ASSERT_MESSAGE("Have a specified index", reset->position().state()==helpers::position::INDEX);
     CPPUNIT_ASSERT_MESSAGE("Have correct specified index", reset->position().index()==12);
+}
+
+void CommandParsingTest::test_reset_03()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("reset (titi, toto) at index 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::reset* reset = dynamic_cast<commands::reset*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'reset' command", reset!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", reset->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", reset->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", reset->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified index", reset->position().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified index", reset->position().index()==12);
+}
+
+void CommandParsingTest::test_reset_04()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("reset (titi, toto) at time 12");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::reset* reset = dynamic_cast<commands::reset*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'reset' command", reset!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have 2 specified column names", reset->colnames().size()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", reset->colnames()[0]=="titi");
+    CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", reset->colnames()[1]=="toto");
+
+    CPPUNIT_ASSERT_MESSAGE("Have a specified time", reset->position().state()==helpers::position::TIME);
+    CPPUNIT_ASSERT_MESSAGE("Have correct specified time", reset->position().time()==12);
 }

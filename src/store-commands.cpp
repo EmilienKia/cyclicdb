@@ -230,7 +230,12 @@ namespace commands
             rec.set(_columns[n], values()[n]);
         }
 
-        if(position().state()==helpers::position::INDEX)
+        if(position().state()==helpers::position::TIME)
+        {
+            // Specified time
+            table->insert_record(position().time(), rec);
+        }
+        else if(position().state()==helpers::position::INDEX)
         {
             // Specified index
             table->insert_record(position().index(), rec);
@@ -271,7 +276,12 @@ namespace commands
 
         if(table->record_count()>0)
         {
-            if(position().state()==helpers::position::INDEX)
+            if(position().state()==helpers::position::TIME)
+            {
+                // Specified time
+                table->set_record(position().time(), rec);
+            }
+            else if(position().state()==helpers::position::INDEX)
             {
                 // Specified index
                 table->set_record(position().index(), rec);
@@ -310,7 +320,12 @@ namespace commands
             rec.set(_columns[n], values()[n]);
         }
 
-        if(position().state()==helpers::position::INDEX)
+        if(position().state()==helpers::position::TIME)
+        {
+            // Specified time
+            table->append_record(position().time(), rec);
+        }
+        else if(position().state()==helpers::position::INDEX)
         {
             // Specified index
             table->append_record(position().index(), rec);
@@ -341,7 +356,12 @@ namespace commands
         if(table->record_count()>0)
         {
             cyclic::record_index_t index;
-            if(position().state()==helpers::position::INDEX)
+            if(position().state()==helpers::position::TIME)
+            {
+                // Reset specified record.
+                index = table->record_index(position().time());
+            }
+            else if(position().state()==helpers::position::INDEX)
             {
                 // Reset specified record.
                 index = position().index();
