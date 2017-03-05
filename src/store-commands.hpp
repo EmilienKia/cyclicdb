@@ -117,19 +117,19 @@ public:
 class select : public query_with_colnames
 {
 protected:
-    cyclic::record_index_t _start = 0, _end = cyclic::record::absolute_max_index();
+    helpers::position _start , _end;
 
     select() = default;
 
 public:
     select(const boost::optional<std::vector<std::string>>& colnames,
-        const boost::optional<unsigned long>& start,
-        const boost::optional<unsigned long>& end);
+        const helpers::position& start,
+        const helpers::position& end);
     virtual ~select() = default;
     virtual bool execute(std::shared_ptr<cyclic::store::impl::file_table_impl>) override;
 
-    cyclic::record_index_t start()const {return _start;}
-    cyclic::record_index_t end()const {return _end;}
+    const helpers::position& start()const {return _start;}
+    const helpers::position& end()const {return _end;}
 };
 
 

@@ -149,10 +149,12 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
         column_name %= quoted_string;
         column_names %= column_name % ',';
 
-        start %= no_case[lit("start")] >> ulong_;
-        end   %= no_case[lit("end")] >> ulong_;
+        start %= no_case[lit("start")] >> position;
+        end   %= no_case[lit("end")] >> position;
+        opt_start = (-(start))[phoenix::bind(adapt_position_opt, _val, _1)];
+        opt_end   = (-(end))[phoenix::bind(adapt_position_opt, _val, _1)];
 
-        select = (no_case[lit("select")] >> (lit("*")|column_names) >> -start >> -end )
+        select = (no_case[lit("select")] >> (lit("*")|column_names) >> opt_start >> opt_end )
                 [_val = phoenix::new_<commands::select>(_1, _2, _3)];
 
         dump = no_case[lit("dump")][_val = phoenix::new_<commands::dump>()];
@@ -204,8 +206,10 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
 
     qi::rule<Iterator, std::vector<std::string>(), ascii::space_type> column_names;
 
-    qi::rule<Iterator, boost::optional<unsigned long>(), ascii::space_type> start;
-    qi::rule<Iterator, boost::optional<unsigned long>(), ascii::space_type> end;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> start;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> end;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> opt_start;
+    qi::rule<Iterator, helpers::position(), ascii::space_type> opt_end;
 
 
     qi::rule<Iterator, commands::command*(), ascii::space_type> select;

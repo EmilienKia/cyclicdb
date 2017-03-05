@@ -159,24 +159,33 @@ namespace commands
     // select
     //
     select::select(const boost::optional<std::vector<std::string>>& colnames,
-            const boost::optional<unsigned long>& start,
-            const boost::optional<unsigned long>& end):
-    query_with_colnames(colnames)
+            const helpers::position& start,
+            const helpers::position& end):
+    query_with_colnames(colnames),
+    _start(start),
+    _end(end)
     {
-        if(start)
-        {
-            this->_start = *start;
-        }
-        if(end)
-        {
-            this->_end = *end;
-        }
     }
 
     bool select::execute(std::shared_ptr<cyclic::store::impl::file_table_impl> table)
     {
         if(!deduce_columns(table))
             return false;
+
+        if(table->record_count()==0)
+        {
+            std::cerr << "Table is empty." << std::endl;
+            return false;
+        }
+
+        if(table->record_duration()==0 && (
+                start().state()==helpers::position::TIME
+                || end().state()==helpers::position::TIME
+                ))
+        {
+            std::cerr << "Table does not support time." << std::endl;
+            return false;
+        }
 
         // Print headers
         std::cout << "index";
@@ -191,20 +200,44 @@ namespace commands
         }
         std::cout << std::endl;
 
-        if(table->record_count()>0)
+        cyclic::record_index_t min, max;
+
+        if(start().state()==helpers::position::TIME)
         {
-            for(cyclic::record_index_t r = std::max(_start, table->min_index());
-                    r <= std::min(_end, table->max_index());
-                    ++r)
+            min = table->record_index(start().time());
+        }
+        else if(start().state()==helpers::position::INDEX)
+        {
+            min = start().index();
+        }
+        else
+        {
+            min = table->min_index();
+        }
+
+        if(end().state()==helpers::position::TIME)
+        {
+            max = table->record_index(end().time());
+        }
+        else if(end().state()==helpers::position::INDEX)
+        {
+            max = end().index();
+        }
+        else
+        {
+            max = cyclic::record::absolute_max_index();
+        }
+
+        for(cyclic::record_index_t r = std::max(min, table->min_index());
+                r <= std::min(max, table->max_index()); ++r)
+        {
+            std::cout << r;
+            auto rec = table->get_record(r);
+            for(size_t n=0; n<_columns.size(); ++n)
             {
-                std::cout << r;
-                auto rec = table->get_record(r);
-                for(size_t n=0; n<_columns.size(); ++n)
-                {
-                    std::cout << "\t" << val_to_str((*rec)[_columns[n]]);
-                }
-                std::cout << std::endl;
+                std::cout << "\t" << val_to_str((*rec)[_columns[n]]);
             }
+            std::cout << std::endl;
         }
         return true;
     }

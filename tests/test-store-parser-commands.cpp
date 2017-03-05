@@ -28,6 +28,8 @@ class CommandParsingTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(CommandParsingTest);
         CPPUNIT_TEST(test_select_01);
         CPPUNIT_TEST(test_select_02);
+        CPPUNIT_TEST(test_select_03);
+        CPPUNIT_TEST(test_select_04);
 
         CPPUNIT_TEST(test_insert_01);
         CPPUNIT_TEST(test_insert_02);
@@ -54,6 +56,8 @@ class CommandParsingTest : public CppUnit::TestFixture {
 public:
     void test_select_01();
     void test_select_02();
+    void test_select_03();
+    void test_select_04();
 
     void test_insert_01();
     void test_insert_02();
@@ -111,8 +115,10 @@ void CommandParsingTest::test_select_01()
     CPPUNIT_ASSERT_MESSAGE("Parse 'select' command", select!=nullptr);
 
     CPPUNIT_ASSERT_MESSAGE("Have no specified column name", select->colnames().size()==0);
-    CPPUNIT_ASSERT_MESSAGE("Have correct start index", select->start()==2);
-    CPPUNIT_ASSERT_MESSAGE("Have correct end index", select->end()==25);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified start index", select->start().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct start index", select->start().index()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified end index", select->end().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct end index", select->end().index()==25);
 }
 
 void CommandParsingTest::test_select_02()
@@ -131,8 +137,46 @@ void CommandParsingTest::test_select_02()
     CPPUNIT_ASSERT_MESSAGE("Have correct 1st column name", select->colnames()[0]=="titi");
     CPPUNIT_ASSERT_MESSAGE("Have correct 2nd column name", select->colnames()[1]=="toto");
 
-    CPPUNIT_ASSERT_MESSAGE("Have correct implicit start index", select->start()==0);
-    CPPUNIT_ASSERT_MESSAGE("Have correct implicit end index", select->end()==cyclic::record::absolute_max_index());
+    CPPUNIT_ASSERT_MESSAGE("Have no start index specified", select->start().state()==helpers::position::NONE);
+    CPPUNIT_ASSERT_MESSAGE("Have no end index specified", select->end().state()==helpers::position::NONE);
+}
+
+void CommandParsingTest::test_select_03()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("select * start index 2 end index 25");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::select* select = dynamic_cast<commands::select*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'select' command", select!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have no specified column name", select->colnames().size()==0);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified start index", select->start().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct start index", select->start().index()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified end index", select->end().state()==helpers::position::INDEX);
+    CPPUNIT_ASSERT_MESSAGE("Have correct end index", select->end().index()==25);
+}
+
+void CommandParsingTest::test_select_04()
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+
+    commands::command* cmd = parse_command("select * start time 2 end time 25");
+    CPPUNIT_ASSERT_MESSAGE("Parse command", cmd!=nullptr);
+
+    commands::select* select = dynamic_cast<commands::select*>(cmd);
+    CPPUNIT_ASSERT_MESSAGE("Parse 'select' command", select!=nullptr);
+
+    CPPUNIT_ASSERT_MESSAGE("Have no specified column name", select->colnames().size()==0);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified start time", select->start().state()==helpers::position::TIME);
+    CPPUNIT_ASSERT_MESSAGE("Have correct start time", select->start().time()==2);
+    CPPUNIT_ASSERT_MESSAGE("Have a specified end time", select->end().state()==helpers::position::TIME);
+    CPPUNIT_ASSERT_MESSAGE("Have correct end time", select->end().time()==25);
 }
 
 void CommandParsingTest::test_insert_01()
