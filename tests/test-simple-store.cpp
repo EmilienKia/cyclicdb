@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * tests/test-simple-store.cpp
- * Copyright (C) 2017 Emilien Kia <emilien.kia@gmail.com>
+ * Copyright (C) 2017-2019 Emilien Kia <emilien.kia@gmail.com>
  *
  * cyclicdb/tests are free software: you can redistribute them and/or
  * modify them under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cppunit/extensions/HelperMacros.h>
+#include "catch.hpp"
 
 #include <limits>
 #include <cmath>
@@ -25,41 +25,25 @@
 #include "libstore.hpp"
 #include "common-file.hpp"
 
-class SimpleStoreTest : public CppUnit::TestFixture
-{
-    CPPUNIT_TEST_SUITE(SimpleStoreTest);
-        CPPUNIT_TEST(test_value_storage);
-        CPPUNIT_TEST(testSimpleStore);
-    CPPUNIT_TEST_SUITE_END();
-
-public:
-    std::string filename = "test-simple.cydb";
-    std::unique_ptr<cyclic::table> createTable();
-    std::unique_ptr<cyclic::table> openTable();
-    cyclic::field_index_t getFieldCount()const;
-    cyclic::record_index_t getRecordCapacity()const;
-    void removeTable();
+std::string filename = "test-simple.cydb";
+std::unique_ptr<cyclic::table> createTable();
+std::unique_ptr<cyclic::table> openTable();
+cyclic::field_index_t getFieldCount();
+cyclic::record_index_t getRecordCapacity();
+void removeTable();
 
 
-    void test_value_storage();
-
-    void testSimpleStore();
-};
-
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(SimpleStoreTest);
-
-cyclic::field_index_t SimpleStoreTest::getFieldCount()const
+cyclic::field_index_t getFieldCount()
 {
     return 11;
 }
 
-cyclic::record_index_t SimpleStoreTest::getRecordCapacity()const
+cyclic::record_index_t getRecordCapacity()
 {
     return 20;
 }
 
-std::unique_ptr<cyclic::table> SimpleStoreTest::createTable()
+std::unique_ptr<cyclic::table> createTable()
 {
     std::vector<cyclic::field_st> fields{
         {"0bool", cyclic::CDB_DT_BOOLEAN,},
@@ -78,16 +62,15 @@ std::unique_ptr<cyclic::table> SimpleStoreTest::createTable()
     return cyclic::store::file::create(filename, cyclic::store::file::COMPACT, fields, getRecordCapacity());
 }
 
-std::unique_ptr<cyclic::table> SimpleStoreTest::openTable()
+std::unique_ptr<cyclic::table> openTable()
 {
     return cyclic::store::file::open(filename);
 }
 
-void SimpleStoreTest::removeTable()
+void removeTable()
 {
     cyclic::io::file::remove(filename);
 }
-
 
 struct row
 {
@@ -162,9 +145,8 @@ row& operator<<(row& r, const cyclic::record& rec)
 }
 
 
+TEST_CASE("Simple storage", "[simple]") {
 
-void SimpleStoreTest::test_value_storage()
-{
     static row rows[] =
     {
         {false, 42, 42, 42, 42, 42, 42, 42, 42, 42.0, 42.0},
@@ -181,7 +163,7 @@ void SimpleStoreTest::test_value_storage()
 
     {
         auto table = createTable();
-        CPPUNIT_ASSERT_MESSAGE("Db file have been created", table);
+        REQUIRE( table ); // Db file have been created
 
         for(const row& r : rows)
         {
@@ -193,15 +175,15 @@ void SimpleStoreTest::test_value_storage()
 
     {
         auto table = openTable();
-        CPPUNIT_ASSERT_MESSAGE("Db file have been opened", table);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Field count", getFieldCount(), table->field_count());
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Record count", (cyclic::record_index_t)rowcount, table->record_count());
+        REQUIRE( table ); // Db file have been opened
+        REQUIRE( table->field_count() == getFieldCount() ); // Field count
+        REQUIRE( table->record_count() == rowcount); // Record count
         for(cyclic::record_index_t r = 0; r<table->record_count(); ++r)
         {
             auto rec = table->get_record(r);
             row rw;
             rw << *rec;
-            CPPUNIT_ASSERT_MESSAGE("Row content", rw == rows[r]);
+            REQUIRE( rw == rows[r]); // Row content
         }
     }
 
@@ -211,7 +193,7 @@ void SimpleStoreTest::test_value_storage()
 
 
 
-void SimpleStoreTest::testSimpleStore()
+TEST_CASE("Another simple storage", "[simple]")
 {
     static row rows[] =
     {
@@ -234,7 +216,7 @@ void SimpleStoreTest::testSimpleStore()
     {
         auto table = createTable();
 
-        CPPUNIT_ASSERT_MESSAGE("Db file have been created", table);
+        REQUIRE( table ); // Db file have been created
 
         size_t acc = 0;
         for(size_t n = 0; n < 25; n++)
@@ -268,14 +250,14 @@ void SimpleStoreTest::testSimpleStore()
     //
     {
         auto table = openTable();
-        CPPUNIT_ASSERT_MESSAGE("Db file can be opened", table);
+        REQUIRE( table ); // Db file can be opened
         if(table)
         {
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Field count", getFieldCount(), table->field_count());
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Record count", (cyclic::record_index_t)getRecordCapacity(), table->record_count());
+            REQUIRE( table->field_count() == getFieldCount() ); // Field count
+            REQUIRE( table->record_count() == getRecordCapacity() ); // Record count
 
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Record min index", (cyclic::record_index_t)11, table->min_index());
-            CPPUNIT_ASSERT_EQUAL_MESSAGE("Record max index", (cyclic::record_index_t)30, table->max_index());
+            REQUIRE( table->min_index() == 11 ); // Record min index
+            REQUIRE( table->max_index() == 30 ); // Record max index
 
 #if 0
 /* 11: */ {true, -1, 1, -1, 1, -1, 1, -1, 1, -1.0, -1.0},
@@ -303,139 +285,139 @@ void SimpleStoreTest::testSimpleStore()
             // Test record 11
             {
                 auto r = table->get_record((cyclic::record_index_t)11);
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 11", r);
+                REQUIRE( r ); // Has a record at index 11
 
                 cyclic::record& rec = *r;
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 11", rec.ok());
+                REQUIRE( rec.ok()); // Has a record at index 11
 
-                CPPUNIT_ASSERT_MESSAGE("Record 11 field 0 is set", rec.has(0));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 11 field 0 has a boolean value", cyclic::CDB_DT_BOOLEAN, rec[0].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 11 field 0 value", rows[1].b, rec[0].value<bool>());
+                REQUIRE( rec.has(0) ); // Record 11 field 0 is set
+                REQUIRE( rec[0].type() == cyclic::CDB_DT_BOOLEAN ); // Record 11 field 0 has a boolean value
+                REQUIRE( rec[0].value<bool>() == rows[1].b ); // Record 11 field 0 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 11 field 5 is set", rec.has(5));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 11 field 5 has a int32 value", cyclic::CDB_DT_SIGNED_32, rec[5].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 11 field 5 value", rows[1].i32, rec[5].value<int32_t>());
+                REQUIRE( rec.has(5) ); // Record 11 field 5 is set
+                REQUIRE( rec[5].type() == cyclic::CDB_DT_SIGNED_32 ); // Record 11 field 5 has a int32 value
+                REQUIRE( rec[5].value<int32_t>() == rows[1].i32 ); // Record 11 field 5 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 11 field 7 is set", rec.has(7));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 11 field 0 has a int64 value", cyclic::CDB_DT_SIGNED_64, rec[7].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 11 field 7 value", rows[1].i64, rec[7].value<int64_t>());
+                REQUIRE( rec.has(7) ); // Record 11 field 7 is set
+                REQUIRE( rec[7].type() == cyclic::CDB_DT_SIGNED_64 ); // Record 11 field 0 has a int64 value
+                REQUIRE( rec[7].value<int64_t>() == rows[1].i64 ); // Record 11 field 7 value
             }
 
             // Test record 13
             {
                 auto r = table->get_record((cyclic::record_index_t)13);
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 13", r);
+                REQUIRE( r ); // Has a record at index 13
 
                 cyclic::record& rec = *r;
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 13", (bool)rec);
+                REQUIRE( (bool)rec); // "Has a record at index 13"
 
-                CPPUNIT_ASSERT_MESSAGE("Record 13 field 0 is set", rec.has(0));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 13 field 0 has a boolean value", cyclic::CDB_DT_BOOLEAN, rec[0].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 13 field 0 value", rows[3].b, rec[0].value<bool>());
+                REQUIRE( rec.has(0)); // Record 13 field 0 is set
+                REQUIRE( rec[0].type() == cyclic::CDB_DT_BOOLEAN ); // Record 13 field 0 has a boolean value
+                REQUIRE( rec[0].value<bool>() == rows[3].b); // Record 13 field 0 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 13 field 5 is set", rec.has(5));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 13 field 5 has a int32 value", cyclic::CDB_DT_SIGNED_32, rec[5].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 13 field 5 value", rows[3].i32, rec[5].value<int32_t>());
+                REQUIRE( rec.has(5) ); // Record 13 field 5 is set
+                REQUIRE( rec[5].type() == cyclic::CDB_DT_SIGNED_32 ); // Record 13 field 5 has a int32 value
+                REQUIRE( rec[5].value<int32_t>() == rows[3].i32 ); // Record 13 field 5 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 13 field 7 is set", rec.has(7));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 13 field 0 has a int64 value", cyclic::CDB_DT_SIGNED_64, rec[7].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 13 field 7 value", rows[3].i64, rec[7].value<int64_t>());
+                REQUIRE( rec.has(7) ); // Record 13 field 7 is set
+                REQUIRE( rec[7].type() == cyclic::CDB_DT_SIGNED_64 ); // Record 13 field 0 has a int64 value
+                REQUIRE( rec[7].value<int64_t>() == rows[3].i64 ); // Record 13 field 7 value
             }
 
             // Test record 20
             {
                 auto r = table->get_record((cyclic::record_index_t)20);
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 20", r);
+                REQUIRE( r ); // Has a record at index 20
 
                 cyclic::record& rec = *r;
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 20", (bool)rec);
+                REQUIRE( (bool)rec ); // Has a record at index 20
 
-                CPPUNIT_ASSERT_MESSAGE("Record 20 field 0 is set", rec.has(0));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 20 field 0 has a boolean value", cyclic::CDB_DT_BOOLEAN, rec[0].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 20 field 0 value", rows[0].b, rec[0].value<bool>());
+                REQUIRE( rec.has(0) ); // Record 20 field 0 is set
+                REQUIRE( rec[0].type() == cyclic::CDB_DT_BOOLEAN ); // Record 20 field 0 has a boolean value
+                REQUIRE( rec[0].value<bool>() == rows[0].b ); // Record 20 field 0 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 20 field 5 is set", rec.has(5));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 20 field 5 has a int32 value", cyclic::CDB_DT_SIGNED_32, rec[5].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 20 field 5 value", rows[0].i32, rec[5].value<int32_t>());
+                REQUIRE( rec.has(5) ); // Record 20 field 5 is set
+                REQUIRE( rec[5].type() == cyclic::CDB_DT_SIGNED_32 ); // Record 20 field 5 has a int32 value
+                REQUIRE( rec[5].value<int32_t>() == rows[0].i32 ); // Record 20 field 5 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 20 field 7 is set", rec.has(7));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 20 field 0 has a int64 value", cyclic::CDB_DT_SIGNED_64, rec[7].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 20 field 7 value", rows[0].i64, rec[7].value<int64_t>());
+                REQUIRE( rec.has(7) ); // Record 20 field 7 is set
+                REQUIRE( rec[7].type() == cyclic::CDB_DT_SIGNED_64 ); // Record 20 field 0 has a int64 value
+                REQUIRE( rec[7].value<int64_t>() == rows[0].i64 ); // Record 20 field 7 value
             }
 
             // Test record 26
             {
                 auto r = table->get_record((cyclic::record_index_t)26);
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 26", r);
+                REQUIRE( r ); // Has a record at index 26
 
                 cyclic::record& rec = *r;
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 26", (bool)rec);
+                REQUIRE( (bool)rec ); // Has a record at index 26
 
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 0 is not set", !rec.has(0));
+                REQUIRE( !rec.has(0) ); // Record 26 field 0 is not set
 
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 1 is set", rec.has(1));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 26 field 1 has a int8 value", cyclic::CDB_DT_SIGNED_8, rec[1].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 26 field 1 value", (int8_t)42, rec[1].value<int8_t>());
+                REQUIRE( rec.has(1) ); // Record 26 field 1 is set
+                REQUIRE( rec[1].type() == cyclic::CDB_DT_SIGNED_8 ); // Record 26 field 1 has a int8 value
+                REQUIRE( rec[1].value<int8_t>() == (int8_t)42 ); // Record 26 field 1 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 2 is not set", !rec.has(2));
+                REQUIRE( !rec.has(2) ); // Record 26 field 2 is not set
 
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 3 is set", rec.has(3));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 26 field 3 has a int16 value", cyclic::CDB_DT_SIGNED_16, rec[3].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 26 field 3 value", (int16_t)42, rec[3].value<int16_t>());
+                REQUIRE( rec.has(3) ); // Record 26 field 3 is set
+                REQUIRE( rec[3].type() == cyclic::CDB_DT_SIGNED_16 ); // Record 26 field 3 has a int16 value
+                REQUIRE( rec[3].value<int16_t>() == 42 ); // Record 26 field 3 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 4 is not set", !rec.has(4));
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 5 is not set", !rec.has(5));
-                CPPUNIT_ASSERT_MESSAGE("Record 26 field 6 is not set", !rec.has(6));
+                REQUIRE( !rec.has(4) ); // Record 26 field 4 is not set
+                REQUIRE( !rec.has(5) ); // Record 26 field 5 is not set
+                REQUIRE( !rec.has(6) ); // Record 26 field 6 is not set
             }
 
             // Test record 27
             {
                 auto r = table->get_record((cyclic::record_index_t)27);
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 27", r);
+                REQUIRE( r ); // Has a record at index 27
 
                 cyclic::record& rec = *r;
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 27", (bool)rec);
+                REQUIRE( (bool)rec ); // Has a record at index 27
 
-                CPPUNIT_ASSERT_MESSAGE("Record 27 field 0 is set", rec.has(0));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 0 has a boolean value", cyclic::CDB_DT_BOOLEAN, rec[0].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 0 value", (bool)false, rec[0].value<bool>());
+                REQUIRE( rec.has(0) ); // Record 27 field 0 is set
+                REQUIRE( rec[0].type() == cyclic::CDB_DT_BOOLEAN ); // Record 27 field 0 has a boolean value
+                REQUIRE( rec[0].value<bool>() == false ); // Record 27 field 0 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 27 field 1 is set", rec.has(1));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 1 has a int8 value", cyclic::CDB_DT_SIGNED_8, rec[1].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 1 value", (int8_t)1, rec[1].value<int8_t>());
+                REQUIRE( rec.has(1) ); // Record 27 field 1 is set
+                REQUIRE( rec[1].type() == cyclic::CDB_DT_SIGNED_8 ); // Record 27 field 1 has a int8 value
+                REQUIRE( rec[1].value<int8_t>() == 1 ); // Record 27 field 1 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 27 field 2 is set", rec.has(2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 2 has a uint8 value", cyclic::CDB_DT_UNSIGNED_8, rec[2].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 2 value", (uint8_t)2, rec[2].value<uint8_t>());
+                REQUIRE( rec.has(2) ); // Record 27 field 2 is set
+                REQUIRE( rec[2].type() == cyclic::CDB_DT_UNSIGNED_8 ); // Record 27 field 2 has a uint8 value
+                REQUIRE( rec[2].value<uint8_t>() == 2 ); // Record 27 field 2 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 27 field 3 is set", rec.has(3));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 3 has a int16 value", cyclic::CDB_DT_SIGNED_16, rec[3].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 3 value", (int16_t)3, rec[3].value<int16_t>());
+                REQUIRE( rec.has(3) ); // Record 27 field 3 is set
+                REQUIRE( rec[3].type() == cyclic::CDB_DT_SIGNED_16 ); // Record 27 field 3 has a int16 value
+                REQUIRE( rec[3].value<int16_t>() == 3 ); // Record 27 field 3 value
 
-                CPPUNIT_ASSERT_MESSAGE("Record 27 field 4 is set", rec.has(4));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 4 has a uint16 value", cyclic::CDB_DT_UNSIGNED_16, rec[4].type());
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Record 27 field 4 value", (uint16_t)4, rec[4].value<uint16_t>());
+                REQUIRE( rec.has(4) ); // Record 27 field 4 is set
+                REQUIRE( rec[4].type() == cyclic::CDB_DT_UNSIGNED_16 ); // Record 27 field 4 has a uint16 value
+                REQUIRE( rec[4].value<uint16_t>() == 4 ); // Record 27 field 4 value
             }
 
             // Test record 29
             {
                 auto r = table->get_record((cyclic::record_index_t)29);
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 29", r);
+                REQUIRE( r ); // Has a record at index 29
 
                 cyclic::record& rec = *r;
-                CPPUNIT_ASSERT_MESSAGE("Has a record at index 29", (bool)rec);
+                REQUIRE( (bool)rec ); // Has a record at index 29
 
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 0 is not set", !rec.has(0));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 1 is not set", !rec.has(1));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 2 is not set", !rec.has(2));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 3 is not set", !rec.has(3));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 4 is not set", !rec.has(4));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 5 is not set", !rec.has(5));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 6 is not set", !rec.has(6));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 7 is not set", !rec.has(7));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 8 is not set", !rec.has(8));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 9 is not set", !rec.has(9));
-                CPPUNIT_ASSERT_MESSAGE("Record 29 field 10 is not set", !rec.has(10));
+                REQUIRE( !rec.has(0) ); // Record 29 field 0 is not set
+                REQUIRE( !rec.has(1) ); // Record 29 field 1 is not set
+                REQUIRE( !rec.has(2) ); // Record 29 field 2 is not set
+                REQUIRE( !rec.has(3) ); // Record 29 field 3 is not set
+                REQUIRE( !rec.has(4) ); // Record 29 field 4 is not set
+                REQUIRE( !rec.has(5) ); // Record 29 field 5 is not set
+                REQUIRE( !rec.has(6) ); // Record 29 field 6 is not set
+                REQUIRE( !rec.has(7) ); // Record 29 field 7 is not set
+                REQUIRE( !rec.has(8) ); // Record 29 field 8 is not set
+                REQUIRE( !rec.has(9) ); // Record 29 field 9 is not set
+                REQUIRE( !rec.has(10) ); // Record 29 field 10 is not set
             }
         }
     }

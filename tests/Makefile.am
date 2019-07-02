@@ -1,29 +1,16 @@
 # cyclicdb: tests
 
-# List of src files for CppUnit tests
-CPPUNITTESTSRC = \
-	test-common-type.cpp \
-	test-mem-store.cpp \
-	test-simple-store.cpp \
-	test-store-parser-commands.cpp \
-	test-store-parser-types.cpp
 
-if HAVE_CPPUNIT
-
-TESTS = cppunittest
+TESTS = utests
 
 check_PROGRAMS = $(TESTS)
 
-cppunittest_CXXFLAGS = $(CPPUNIT_CFLAGS) -I../src/
-cppunittest_LDFLAGS = $(CPPUNIT_LIBS)
-cppunittest_LDADD = ../src/libcyclicstore.la
-
-cppunittest_SOURCES = $(CPPUNITTESTSRC) cpputest.cpp \
+utests_CXXFLAGS = -I../src/
+utests_LDADD = ../src/libcyclicstore.la
+utests_SOURCES = catch.hpp runner.cpp \
+	test-common-type.cpp \
+	test-mem-store.cpp \
+	test-simple-store.cpp \
+	test-store-parser-types.cpp \
+	test-store-parser-commands.cpp \
 	../src/store-commands.cpp
-
-
-else !HAVE_CPPUNIT
-
-EXTRA_DIST = example.cpp cpputest.cpp $(CPPUNITTESTSRC)
-
-endif !HAVE_CPPUNIT

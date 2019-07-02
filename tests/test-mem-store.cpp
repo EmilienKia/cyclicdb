@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * tests/test-mem-store.cpp
- * Copyright (C) 2017 Emilien Kia <emilien.kia@gmail.com>
+ * Copyright (C) 2017-2019 Emilien Kia <emilien.kia@gmail.com>
  *
  * cyclicdb/tests are free software: you can redistribute them and/or
  * modify them under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cppunit/extensions/HelperMacros.h>
+#include "catch.hpp"
 
 #include <limits>
 #include <cmath>
@@ -25,22 +25,9 @@
 #include "libstore.hpp"
 #include "common-file.hpp"
 
-class MemoryStoreTest : public CppUnit::TestFixture
-{
-    CPPUNIT_TEST_SUITE(MemoryStoreTest);
-        CPPUNIT_TEST(test_memory_store);
-    CPPUNIT_TEST_SUITE_END();
 
-public:
-    void test_memory_store();
-};
+TEST_CASE("Memory storage", "[memory]") {
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(MemoryStoreTest);
-
-
-void MemoryStoreTest::test_memory_store()
-{
     std::vector<cyclic::field_st> fields{
         {"0bool", cyclic::CDB_DT_BOOLEAN,},
         {"1int8", cyclic::CDB_DT_SIGNED_8},
@@ -58,36 +45,42 @@ void MemoryStoreTest::test_memory_store()
     size_t capacity = 10;
 
     std::unique_ptr<cyclic::table> table = cyclic::store::memory::create(fields, capacity);
-    CPPUNIT_ASSERT_MESSAGE("Db memory have been created", table);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has correct capacity", (cyclic::record_index_t)capacity, (cyclic::record_index_t)table->record_capacity());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table is empty (count)", (cyclic::record_index_t)0, (cyclic::record_index_t)table->record_count());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table is empty (min index)", (cyclic::record_index_t)cyclic::record::invalid_index(), (cyclic::record_index_t)table->min_index());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table is empty (max index)", (cyclic::record_index_t)cyclic::record::invalid_index(), (cyclic::record_index_t)table->max_index());
 
+    INFO( "Empty table" );
+    REQUIRE( table );
+    REQUIRE( table->record_capacity() == capacity );
+    REQUIRE( table->record_count() == 0 );
+    REQUIRE( table->min_index() == cyclic::record::invalid_index() );
+    REQUIRE( table->max_index() == cyclic::record::invalid_index() );
+
+    INFO( "Append one record" );
     table->append_record((cyclic::record_index_t)0);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has one rec", (cyclic::record_index_t)1, (cyclic::record_index_t)table->record_count());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has one rec at index 0 (min index)", (cyclic::record_index_t)0, (cyclic::record_index_t)table->min_index());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has one rec at index 0 (max index)", (cyclic::record_index_t)0, (cyclic::record_index_t)table->max_index());
+    REQUIRE( table->record_count() == 1 );
+    REQUIRE( table->min_index() == 0 );
+    REQUIRE( table->max_index() == 0 );
 
-
+    INFO( "Append two more records" );
     table->append_record((cyclic::record_index_t)2);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has 3 rec", (cyclic::record_index_t)3, (cyclic::record_index_t)table->record_count());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has min index at 0", (cyclic::record_index_t)0, (cyclic::record_index_t)table->min_index());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has max index at 2", (cyclic::record_index_t)2, (cyclic::record_index_t)table->max_index());
+    REQUIRE( table->record_count() == 3 );
+    REQUIRE( table->min_index() == 0 );
+    REQUIRE( table->max_index() == 2 );
 
+    INFO( "Append another record" );
     table->append_record();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has 4 rec", (cyclic::record_index_t)4, (cyclic::record_index_t)table->record_count());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has min index at 0", (cyclic::record_index_t)0, (cyclic::record_index_t)table->min_index());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has max index at 2", (cyclic::record_index_t)3, (cyclic::record_index_t)table->max_index());
+    REQUIRE( table->record_count() == 4 );
+    REQUIRE( table->min_index() == 0 );
+    REQUIRE( table->max_index() == 3 );
 
+    INFO( "Test 5int32 field" )
     const cyclic::field& field = table->field("5int32");
-    CPPUNIT_ASSERT_MESSAGE("Table has field named '5int32'", &field != nullptr);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Field '5int32' is at index", (cyclic::field_index_t)5, field.index());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Field '5int32' has a correct name", std::string{"5int32"}, field.name());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Field '5int32' has a correct type", cyclic::CDB_DT_SIGNED_32, field.type());
+    REQUIRE( &field != nullptr );
+    REQUIRE( field.index() == 5 );
+    REQUIRE( field.name() == "5int32" );
+    REQUIRE( field.type() == cyclic::CDB_DT_SIGNED_32 );
 
 
     {
+        INFO( "Test setting a specific already existing record" )
         cyclic::record_index_t index = 1;
 
         auto rec = table->get_record();
@@ -98,43 +91,44 @@ void MemoryStoreTest::test_memory_store()
         (*rec)[4] = (uint16_t) 16;
         table->set_record(index, *rec);
 
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has 4 rec (no record appended)", (cyclic::record_index_t)4, (cyclic::record_index_t)table->record_count());
+        REQUIRE( table->record_count() == 4 ); // No record appended
 
         auto rec2 = table->get_record(index);
-        CPPUNIT_ASSERT_MESSAGE("Table has record at index 1", rec2);
+        REQUIRE( (bool)rec2 == true ); // Table has record at index 1
 
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 1 has value at field 0", rec2->has(0));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 1 has value at field '0bool'", rec2->has("0bool"));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 1 field 0 value", rec2->get(0).value<bool>() == true);
+        REQUIRE( rec2->has(0) ); // Record at idx 1 has value at field 0
+        REQUIRE( rec2->has("0bool") ); // Record at idx 1 has value at field '0bool'
+        REQUIRE( rec2->get(0).value<bool>() == true ); // Record at idx 1 field 0 value
 
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 1 has value at field 3", rec2->has(3));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 1 has value at field '3int16'", rec2->has("3int16"));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Record at idx 1 field 3 value", (int16_t)-16, rec2->get(3).value<int16_t>());
+        REQUIRE( rec2->has(3) ); // Record at idx 1 has value at field 3
+        REQUIRE( rec2->has("3int16") ); // Record at idx 1 has value at field '3int16'
+        REQUIRE( rec2->get(3).value<int16_t>() == -16 ); // Record at idx 1 field 3 value
     }
 
     {
+        INFO( "Test append record" )
         cyclic::record_index_t index = 5;
 
         cyclic::raw_record r = cyclic::raw_record::raw({false, -1, 2, -3, nullptr, cyclic::null, 6});
         table->append_record(index, r);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Table has 6 records", (cyclic::record_index_t)6, (cyclic::record_index_t)table->record_count());
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("max index record is 5", (cyclic::record_index_t)index, (cyclic::record_index_t)table->max_index());
+        REQUIRE( table->record_count() == 6 );
+        REQUIRE( (cyclic::record_index_t)table->max_index() == index );
 
         auto rec = table->get_record(index);
-        CPPUNIT_ASSERT_MESSAGE("Table has record at index 5", rec);
+        REQUIRE( (bool)rec == true);
 
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field 1", rec->has(1));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field '1int8'", rec->has("1int8"));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Record at idx 5 field 1 value", (int8_t)-1, rec->get(1).value<int8_t>());
+        REQUIRE( rec->has(1) ); // Record at idx 5 has value at field 1
+        REQUIRE( rec->has("1int8") ); // Record at idx 5 has value at field '1int8'
+        REQUIRE( rec->get(1).value<int8_t>() == -1); // Record at idx 5 field 1 value
 
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field 4", !rec->has(4));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field '4uint16'", !rec->has("4uint16"));
+        REQUIRE( !rec->has(4) ); // Record at idx 5 has value at field 4
+        REQUIRE( !rec->has("4uint16") ); // Record at idx 5 has value at field '4uint16'
 
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field 5", !rec->has(5));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field '5int32'", !rec->has("5int32"));
+        REQUIRE( !rec->has(5) ); // Record at idx 5 has value at field 5
+        REQUIRE( !rec->has("5int32") ); // Record at idx 5 has value at field '5int32'
 
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field 6", rec->has(1));
-        CPPUNIT_ASSERT_MESSAGE("Record at idx 5 has value at field '6uint32'", rec->has("6uint32"));
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Record at idx 5 field 6 value", (uint32_t)6, rec->get(6).value<uint32_t>());
+        REQUIRE( rec->has(1) ); // Record at idx 5 has value at field 6
+        REQUIRE( rec->has("6uint32") ); // Record at idx 5 has value at field '6uint32'
+        REQUIRE( rec->get(6).value<uint32_t>() == 6 ); // Record at idx 5 field 6 value
     }
 }

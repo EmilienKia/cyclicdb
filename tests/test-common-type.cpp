@@ -1,235 +1,207 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * tests/test-common-types.cpp
- * Copyright (C) 2017 Emilien Kia <emilien.kia@gmail.com>
- * 
+ * Copyright (C) 2017-2019 Emilien Kia <emilien.kia@gmail.com>
+ *
  * cyclicdb/tests are free software: you can redistribute them and/or
  * modify them under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or (at your
  * option) any later version.
- * 
+ *
  * cyclicdb is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the COPYING file at the root of the source distribution for more details.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cppunit/extensions/HelperMacros.h>
+
+#include "catch.hpp"
 
 #include "common-type.hpp"
 
-class TypeTest : public CppUnit::TestFixture
-{
-  CPPUNIT_TEST_SUITE( TypeTest );
-    CPPUNIT_TEST( test_unspec );
-    CPPUNIT_TEST( test_boolean );
-    CPPUNIT_TEST( test_int8 );
-    CPPUNIT_TEST( test_uint8 );
-    CPPUNIT_TEST( test_int16 );
-    CPPUNIT_TEST( test_uint16 );
-    CPPUNIT_TEST( test_int32 );
-    CPPUNIT_TEST( test_uint32 );
-    CPPUNIT_TEST( test_int64 );
-    CPPUNIT_TEST( test_uint64 );
-    CPPUNIT_TEST( test_float4 );
-    CPPUNIT_TEST( test_float8 );
 
-    CPPUNIT_TEST( test_strict );
-    CPPUNIT_TEST( test_cast );
-  CPPUNIT_TEST_SUITE_END();
+TEST_CASE("Unspecified type", "[types]") {
 
-public:
-  void test_unspec();
-  void test_boolean();
-  void test_int8();
-  void test_uint8();
-  void test_int16();
-  void test_uint16();
-  void test_int32();
-  void test_uint32();
-  void test_int64();
-  void test_uint64();
-  void test_float4();
-  void test_float8();
-  
-  void test_strict();
-  void test_cast();
-  
-};
-
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION( TypeTest );
-
-void TypeTest::test_unspec()
-{
     using namespace cyclic;
-    
     value_t val;
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unspecified type", CDB_DT_UNSPECIFIED, val.type());
-    CPPUNIT_ASSERT_MESSAGE("Not has value", !val.has_value());
+
+    REQUIRE( val.type() == CDB_DT_UNSPECIFIED );
+    REQUIRE( !val.has_value() );
 }
 
-void TypeTest::test_boolean()
-{
+TEST_CASE("Boolean type", "[types]") {
+
     using namespace cyclic;
-    
     value_t val{false};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Boolean type", CDB_DT_BOOLEAN, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Boolean 'false' value", false, val.value<bool>());
+
+    REQUIRE( val.type() == CDB_DT_BOOLEAN );
+    REQUIRE( val.value<bool>() == false );
+
     val = true;
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Boolean type", CDB_DT_BOOLEAN, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Boolean 'true' value", true, val.value<bool>());
+
+    REQUIRE( val.type() == CDB_DT_BOOLEAN );
+    REQUIRE( val.value<bool>() == true );
 }
 
-void TypeTest::test_int8()
-{
+TEST_CASE("Signed 8-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_SIGNED_8;
     typedef int8_t valtype;
-       
+
     valtype def = -4;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 8 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 8 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_uint8()
-{
+TEST_CASE("Unsigned 8-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_UNSIGNED_8;
     typedef uint8_t valtype;
-       
+
     valtype def = 42;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 8 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 8 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_int16()
-{
+TEST_CASE("Signed 16-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_SIGNED_16;
     typedef int16_t valtype;
-       
+
     valtype def = -12345;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 16 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 16 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_uint16()
-{
+TEST_CASE("Unsigned 16-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_UNSIGNED_16;
     typedef uint16_t valtype;
-       
+
     valtype def = 54321;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 16 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 16 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_int32()
-{
+TEST_CASE("Signed 32-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_SIGNED_32;
     typedef int32_t valtype;
-       
+
     valtype def = -1234567890l;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 32 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 32 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_uint32()
-{
+TEST_CASE("Unsigned 32-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_UNSIGNED_32;
     typedef uint32_t valtype;
-       
+
     valtype def = 4012345678u;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 32 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 32 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_int64()
-{
+TEST_CASE("Signed 64-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_SIGNED_64;
     typedef int64_t valtype;
-       
+
     valtype def = -1123123123123123123ll;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 64 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 64 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_uint64()
-{
+TEST_CASE("Unsigned 64-bits integer type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_UNSIGNED_64;
     typedef uint64_t valtype;
-       
+
     valtype def = 12123123123123123123ull;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 64 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 64 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_float4()
-{
+TEST_CASE("4-bytes floating type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_FLOAT_4;
     typedef float valtype;
-       
+
     valtype def = -123.456e-3;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 64 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Integer 64 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_float8()
-{
+TEST_CASE("8-bytes floating type", "[types]") {
+
     using namespace cyclic;
-    
+
     data_type datatype = CDB_DT_FLOAT_8;
     typedef double valtype;
-       
+
     valtype def = -123.456e-3;
     value_t val{def};
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 64 type", datatype, val.type());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Unisgned integer 64 value", def, val.value<valtype>());
+
+    REQUIRE( val.type() == datatype );
+    REQUIRE( val.value<valtype>() == def );
 }
 
-void TypeTest::test_strict()
-{
+
+TEST_CASE("Strict type getting", "[types]") {
+
     int32_t def = 12345;
     cyclic::value_t val{def};
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Strict value getter", def, val.value<int32_t>());
-    
-    CPPUNIT_ASSERT_THROW_MESSAGE("Strict value getter invalid", val.value_strict<uint16_t>(), cyclic::type_exception);    
+    REQUIRE( val.value<int32_t>() == def );
+    REQUIRE_THROWS_AS( val.value_strict<uint16_t>() , cyclic::type_exception);
 }
 
-void TypeTest::test_cast()
-{
+TEST_CASE("Type casting", "[types]") {
+
     int32_t def = 12345;
     cyclic::value_t val{def};
 
     int16_t res = val.value<int16_t>();
-    
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Get value with cast", def, (int32_t)res);
+
+    REQUIRE( ((int32_t)res) == def );
 }

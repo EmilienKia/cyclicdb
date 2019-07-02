@@ -21,23 +21,6 @@ LT_INIT
 BOOST_REQUIRE
 BOOST_PROGRAM_OPTIONS
 
-
-dnl ***************************************************************************
-dnl Check for unit test runner
-dnl ***************************************************************************
-dnl
-dnl Tests for CppUnit availability and usability
-dnl Using CppUnit implies C++ support!
-dnl Theoretically, libcppunit-dev will pull up to g++, through libstdc++...
-dnl AM_PATH_CPPUNIT(1.9.6)
-
-PKG_CHECK_MODULES(CPPUNIT, cppunit, have_cppunit=yes, have_cppunit=no)
-if test "${have_cppunit}" != "yes" ; then
-    AC_MSG_WARN([libcppunit not found.])
-fi
-AM_CONDITIONAL(HAVE_CPPUNIT, test "${have_cppunit}" = "yes")
-
-
 dnl ***************************************************************************
 dnl Documentation (Doxygen)
 dnl ***************************************************************************
