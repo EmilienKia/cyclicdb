@@ -23,6 +23,7 @@
 namespace cyclic
 {
 
+
 //
 // raw_record
 //

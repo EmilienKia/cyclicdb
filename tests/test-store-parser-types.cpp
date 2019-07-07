@@ -38,7 +38,7 @@ TEST_CASE("Parsing null", "[parser]")
 
     REQUIRE( phrase_parse(begin, end, grammar, boost::spirit::ascii::space, value) ); // Parse 'null' successfully
     REQUIRE( begin==end ); // Parse 'null' completely
-    REQUIRE( value.type() == cyclic::CDB_DT_UNSPECIFIED ); // Parse 'null' with correct type
+    REQUIRE( value.type() == cyclic::CDB_DT_VOID ); // Parse 'null' with correct type
 }
 
 TEST_CASE("Parsing boolean", "[parser]")

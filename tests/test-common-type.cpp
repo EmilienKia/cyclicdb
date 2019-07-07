@@ -22,13 +22,12 @@
 
 #include "common-type.hpp"
 
-
 TEST_CASE("Unspecified type", "[types]") {
 
     using namespace cyclic;
     value_t val;
 
-    REQUIRE( val.type() == CDB_DT_UNSPECIFIED );
+    REQUIRE( val.type() == CDB_DT_VOID );
     REQUIRE( !val.has_value() );
 }
 
@@ -193,7 +192,7 @@ TEST_CASE("Strict type getting", "[types]") {
     cyclic::value_t val{def};
 
     REQUIRE( val.value<int32_t>() == def );
-    REQUIRE_THROWS_AS( val.value_strict<uint16_t>() , cyclic::type_exception);
+    REQUIRE_THROWS_AS( val.value_strict<uint16_t>() , std::bad_variant_access);
 }
 
 TEST_CASE("Type casting", "[types]") {
