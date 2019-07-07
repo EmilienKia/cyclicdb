@@ -21,41 +21,39 @@
 #include "store-commands.hpp"
 #include "store-parser-commands.hpp"
 
+#include <array>
+
 namespace cyclicstore
 {
 
-std::string val_to_str(cyclic::value_t val)
+namespace intrnal
 {
-    switch(val.type())
+
+    /*
+     * val_to_str visitor class
+     */
+
+    struct to_string
     {
-    case cyclic::CDB_DT_BOOLEAN: return val.value<bool>() ? "true" : "false";
-    case cyclic::CDB_DT_SIGNED_8:
-    case cyclic::CDB_DT_SIGNED_16:
-    case cyclic::CDB_DT_SIGNED_32:
-        return std::to_string(val.value<int32_t>());
-    case cyclic::CDB_DT_UNSIGNED_8:
-    case cyclic::CDB_DT_UNSIGNED_16:
-    case cyclic::CDB_DT_UNSIGNED_32:
-        return std::to_string(val.value<uint32_t>());
-    case cyclic::CDB_DT_SIGNED_64:
-        return std::to_string(val.value<int64_t>());
-    case cyclic::CDB_DT_UNSIGNED_64:
-        return std::to_string(val.value<uint64_t>());
-    case cyclic::CDB_DT_FLOAT_4:
-        return std::to_string(val.value<float>());
-    case cyclic::CDB_DT_FLOAT_8:
-        return std::to_string(val.value<double>());
-    case cyclic::CDB_DT_UNSPECIFIED:
-        return "<null>";
-    case cyclic::CDB_DT_VOID:
-        return "<void>";
-    default:
-        return "<>";
-    }
+        template<typename T>
+        std::string operator()(T val)const{return std::to_string(val);}
+
+    };
+
+    template<>
+    std::string to_string::operator()(cyclic::null_t val)const{return "<null>";}
+
+    template<>
+    std::string to_string::operator()(bool val)const{return val ? "true" : "false";}
+
 }
 
+std::string val_to_str(cyclic::value_t val)
+{
+    std::visit(intrnal::to_string{}, (cyclic::var_value_t&) val);
+}
 
-const std::vector<std::string> field_type_canonical_names
+const std::array<std::string, cyclic::CDB_DT_MAX_TYPE> field_type_canonical_names
 {
     "void", // CDB_DT_VOID = 0,
     "bool", // CDB_DT_BOOLEAN,
@@ -69,8 +67,6 @@ const std::vector<std::string> field_type_canonical_names
     "unsigned64", // CDB_DT_UNSIGNED_64,
     "float4", // CDB_DT_FLOAT_4,
     "float8", // CDB_DT_FLOAT_8,
-
-// CDB_DT_MAX_TYPE,
 };
 
 
@@ -142,7 +138,7 @@ namespace commands
     {
     }
 
-    
+
     //
     // query_with_colnames_values_and_position
     //
@@ -425,7 +421,7 @@ namespace commands
             // Cannot reset an  empty table.
             std::cerr << "Cannot reset a record in an empty table." << std::endl;
         }
-        
+
         return false;
     }
 
