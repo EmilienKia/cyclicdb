@@ -137,17 +137,20 @@ record& raw_record::attach(const cyclic::recordset* recordset)
 {
     _recordset = recordset;
     // TODO Must I do some additional checks ?
+    return *this;
 }
 
 record& raw_record::index(index_t index)
 {
     _index = index;
     // TODO Must I do some additional checks ?
+    return *this;
 }
 
 mutable_record& raw_record::time(time_t time)
 {
     _time = time;
+    return *this;
 }
 
 field_index_t raw_record::size()const

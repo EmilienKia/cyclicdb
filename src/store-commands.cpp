@@ -50,7 +50,7 @@ namespace intrnal
 
 std::string val_to_str(cyclic::value_t val)
 {
-    std::visit(intrnal::to_string{}, (cyclic::var_value_t&) val);
+    return std::visit(intrnal::to_string{}, (cyclic::var_value_t&) val);
 }
 
 const std::array<std::string, cyclic::CDB_DT_MAX_TYPE> field_type_canonical_names
