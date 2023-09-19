@@ -18,8 +18,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../config.h"
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -38,7 +36,7 @@ std::string filename;
 void display_version()
 {
     std::cout
-        << CYCLICSTORE_NAME << " " << VERSION << std::endl
+        << CYCLICSTORE_NAME << " " << PROJECT_VERSION << std::endl
         << "Copyright (C) 2017 Emilien Kia <emilien.kia@gmail.com>" << std::endl
         << "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>." << std::endl
         << "This is free software: you are free to change and redistribute it." << std::endl
