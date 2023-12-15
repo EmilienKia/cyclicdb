@@ -68,7 +68,7 @@ namespace cyclic
     class type_exception : public std::runtime_error
     {
     public:
-        type_exception():std::runtime_error(nullptr){}
+        type_exception():std::runtime_error("Mismatched type."){}
         explicit type_exception(const std::string& what_arg):std::runtime_error(what_arg){}
         explicit type_exception(const char* what_arg):std::runtime_error(what_arg){}
         ~type_exception(){}
@@ -80,7 +80,7 @@ namespace cyclic
     class no_value_exception : public std::runtime_error
     {
     public:
-        no_value_exception():std::runtime_error(nullptr){}
+        no_value_exception():std::runtime_error("No stored value."){}
         explicit no_value_exception(const std::string& what_arg):std::runtime_error(what_arg){}
         explicit no_value_exception(const char* what_arg):std::runtime_error(what_arg){}
         ~no_value_exception(){}
