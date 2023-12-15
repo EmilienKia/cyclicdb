@@ -41,7 +41,7 @@ namespace intrnal
     };
 
     template<>
-    std::string to_string::operator()(cyclic::null_t val)const{return "<null>";}
+    std::string to_string::operator()(std::monostate val)const{return "<null>";}
 
     template<>
     std::string to_string::operator()(bool val)const{return val ? "true" : "false";}

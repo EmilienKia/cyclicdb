@@ -87,32 +87,20 @@ namespace cyclic
     };
 
     /**
-     * Define a null type.
-     * Usefull to set null values.
-     */
-    struct null_t {
-        null_t() = default;
-        null_t(const null_t&) = default;
-        null_t(null_t&&) = default;
-        null_t& operator=(const null_t&) = default;
-        null_t& operator=(null_t&&) = default;
-    };
-
-    /**
      * Null special value, to use to initiate a value to no content.
      */
-    constexpr null_t null;
+    constexpr std::monostate null;
 
     /**
      * Type-union definition for all acceptable value types.
-     * null_t means explicit null value.
+     * std::monostate means explicit no value.
      */
-    typedef std::variant<null_t, bool, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float, double> var_value_t;
+    typedef std::variant<std::monostate, bool, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, float, double> var_value_t;
 
     template<typename T>
     struct get_visitor
     {
-        T operator()(null_t)const{throw no_value_exception();}
+        T operator()(std::monostate)const{throw no_value_exception();}
         T operator()(bool val)const{return val ? 1 : 0;}
         T operator()(int8_t val)const{return (T)val;}
         T operator()(uint8_t val)const{return (T)val;}
@@ -129,7 +117,7 @@ namespace cyclic
     template<>
     struct get_visitor<bool>
     {
-        bool operator()(null_t)const{throw no_value_exception();}
+        bool operator()(std::monostate)const{throw no_value_exception();}
         bool operator()(bool val)const{return val;}
         bool operator()(int8_t val)const{return val!=0;}
         bool operator()(uint8_t val)const{return val!=0;}
@@ -155,10 +143,10 @@ namespace cyclic
     {
     public:
         /** Default construct a value without any stored data.*/
-        constexpr value_t() noexcept : var_value_t(null_t{}) {}
+        constexpr value_t() noexcept : var_value_t() {}
 
         /** Default construct a value with nullptr.*/
-        constexpr value_t(std::nullptr_t&&) noexcept : var_value_t(null_t{}) {}
+        constexpr value_t(std::nullptr_t&&) noexcept : var_value_t() {}
 
 
         /**
@@ -217,7 +205,7 @@ namespace cyclic
          * Test if a value is stored.
          * @return True if a value is stored, false otherwise.
          */
-        bool has_value()const{return !std::holds_alternative<null_t>(*this);}
+        bool has_value()const{return !std::holds_alternative<std::monostate>(*this);}
 
         /**
          * Test if a value is stored.
