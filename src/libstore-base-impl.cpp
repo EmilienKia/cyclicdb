@@ -146,7 +146,7 @@ struct table_impl_state_one_record_at_begining /* 1 */ : public table_impl_state
 
     virtual TABLE_STATE state() const
     {
-        return TABLE_ONE_RECORD_AT_BEGINING;
+        return TABLE_ONE_RECORD_AT_BEGINNING;
     }
 
     virtual record_index_t do_append_record(base_table_impl& table) const
@@ -197,7 +197,7 @@ struct table_impl_state_partial_contiguous_at_begining /* 4 */ : public table_im
 
     virtual TABLE_STATE state() const
     {
-        return TABLE_PARTIAL_CONTIGUOUS_AT_BEGINING;
+        return TABLE_PARTIAL_CONTIGUOUS_AT_BEGINNING;
     }
 
     virtual record_index_t do_append_record(base_table_impl& table) const
@@ -353,7 +353,7 @@ static table_impl_state_full_split_at_end table_impl_state_11;
 // base_table_impl
 //
 
-table_impl_state* base_table_impl::states[12]{
+const table_impl_state* base_table_impl::states[12]{
     &table_impl_state_0,
     &table_impl_state_1,
     &table_impl_state_2,
@@ -559,7 +559,7 @@ TABLE_STATE base_table_impl::get_internal_state_id()const
 
     else if(_min_index == _max_index) // Only one record
     {
-        if(_min_position == 0) return TABLE_ONE_RECORD_AT_BEGINING;
+        if(_min_position == 0) return TABLE_ONE_RECORD_AT_BEGINNING;
         else if(_min_position == _record_capacity - 1) return TABLE_ONE_RECORD_AT_END;
         else return TABLE_ONE_RECORD_SOMEWHERE;
     }
@@ -568,7 +568,7 @@ TABLE_STATE base_table_impl::get_internal_state_id()const
     {
         if(_min_position == 0)
         {
-            if(_max_position < _record_capacity - 1) return TABLE_PARTIAL_CONTIGUOUS_AT_BEGINING;
+            if(_max_position < _record_capacity - 1) return TABLE_PARTIAL_CONTIGUOUS_AT_BEGINNING;
             else return TABLE_FULL_CONTIGUOUS;
         }
         else
@@ -816,10 +816,16 @@ void base_table_impl::append_record(record_time_t time, const record& rec)
 void base_table_impl::insert_record(record_index_t index)
 {
     lock_t lock{_mutex};
-    if(index < _min_index)
+    if(_min_index == record::invalid_index())
+    {
+        // Empty table.
+        // Append as first record
+        append_record(index);
+    }
+    else if(index < _min_index)
     {
         // Index is before first record.
-        throw std::out_of_range{"Cannot insert a record before begining of table."};
+        throw std::out_of_range{"Cannot insert a record before beginning of table."};
     }
     else if(index <= _max_index)
     {
@@ -847,10 +853,16 @@ void base_table_impl::insert_record(const record& rec)
 void base_table_impl::insert_record(record_index_t index, const record& rec)
 {
     lock_t lock{_mutex};
-    if(index < _min_index)
+    if(_min_index == record::invalid_index())
+    {
+        // Empty table.
+        // Append as first record
+        append_record(index, rec);
+    }
+    else if(index < _min_index)
     {
         // Index is before first record.
-        throw std::out_of_range{"Cannot insert a record before begining of table."};
+        throw std::out_of_range{"Cannot insert a record before beginning of table."};
     }
     else if(index <= _max_index)
     {

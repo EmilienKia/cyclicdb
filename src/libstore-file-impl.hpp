@@ -100,7 +100,7 @@ protected:
     void create_table_file();
 
     void read_table_index_descriptor();
-    void write_table_index_descriptor();
+    void write_table_index_descriptor() override;
 
     raw_record get_record_at_position(record_index_t pos) const override;
     void reset_record_at_position(record_index_t pos) override;

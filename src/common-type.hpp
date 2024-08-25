@@ -22,6 +22,8 @@
 
 #include <stdexcept>
 #include <variant>
+#include <sstream>
+#include <iostream>
 
 namespace cyclic
 {
@@ -132,8 +134,6 @@ namespace cyclic
     };
 
 
-
-
     /**
      * Dataholder for storable values.
      * This class acts like a std::variant (or std::any) with conversion rules.
@@ -145,9 +145,14 @@ namespace cyclic
         /** Default construct a value without any stored data.*/
         constexpr value_t() noexcept : var_value_t() {}
 
+        constexpr value_t(const value_t&) noexcept = default;
+        constexpr value_t(value_t&& val) noexcept = default;
+
+        constexpr value_t(const var_value_t& val) noexcept : var_value_t(val) {}
+        constexpr value_t(var_value_t&& val) noexcept : var_value_t(val) {}
+
         /** Default construct a value with nullptr.*/
         constexpr value_t(std::nullptr_t&&) noexcept : var_value_t() {}
-
 
         /**
          * Move-construct a value.
@@ -170,14 +175,14 @@ namespace cyclic
          * @param other Value to assign.
          * @return This.
          */
-        value_t& operator=(const var_value_t& other) {var_value_t::operator=(other); return *this;}
+        value_t& operator=(const value_t& other) = default;
 
         /**
          * Assing a value to this datastorage.
          * @param other Value to assign.
          * @return This.
          */
-        value_t& operator=(var_value_t&& other) noexcept {var_value_t::operator=(std::move(other)); return *this;}
+        value_t& operator=(value_t&& other) = default;
 
         /**
          * Assing a value to this datastorage.
@@ -211,7 +216,7 @@ namespace cyclic
          * Test if a value is stored.
          * @return True if a value is stored, false otherwise.
          */
-        operator bool()const{return has_value();}
+        explicit operator bool()const{return has_value();}
 
         /**
          * Test if the assigned type is the specified one.
@@ -280,6 +285,126 @@ namespace cyclic
         }
 
     };
+
+    template<typename T>
+    struct cast_visitor
+    {
+        value_t operator()(std::monostate)const { return value_t((T)0);}
+        value_t operator()(bool val)const { return value_t((T)(val ? 1 : 0));}
+        value_t operator()(int8_t val)const { return value_t((T)val);}
+        value_t operator()(uint8_t val)const { return value_t((T)val);}
+        value_t operator()(int16_t val)const { return value_t((T)val);}
+        value_t operator()(uint16_t val)const { return value_t((T)val);}
+        value_t operator()(int32_t val)const { return value_t((T)val);}
+        value_t operator()(uint32_t val)const { return value_t((T)val);}
+        value_t operator()(int64_t val)const { return value_t((T)val);}
+        value_t operator()(uint64_t val)const { return value_t((T)val);}
+        value_t operator()(float val)const { return value_t((T)val);}
+        value_t operator()(double val)const { return value_t((T)val);}
+    };
+
+    template<>
+    struct cast_visitor<std::monostate>
+    {
+        template<typename Y>
+        value_t operator()(Y val){return value_t{};}
+    };
+
+    /**
+     * Ensure a value_t is of specified type, by casting its current content.
+     * @param value Value to cast.
+     * @param type Type to ensure to have.
+     * @return The cast value_t
+     */
+    inline value_t cast_value_to(const value_t &value, data_type type) {
+        switch(type) {
+            case CDB_DT_BOOLEAN:
+                return {std::visit(cast_visitor<bool>{}, value)};
+            case CDB_DT_SIGNED_8:
+                return {std::visit(cast_visitor<int8_t>{}, value)};
+            case CDB_DT_UNSIGNED_8:
+                return {std::visit(cast_visitor<uint8_t>{}, value)};
+            case CDB_DT_SIGNED_16:
+                return {std::visit(cast_visitor<int16_t>{}, value)};
+            case CDB_DT_UNSIGNED_16:
+                return {std::visit(cast_visitor<uint16_t>{}, value)};
+            case CDB_DT_SIGNED_32:
+                return {std::visit(cast_visitor<int32_t>{}, value)};
+            case CDB_DT_UNSIGNED_32:
+                return {std::visit(cast_visitor<uint32_t>{}, value)};
+            case CDB_DT_SIGNED_64:
+                return {std::visit(cast_visitor<int64_t>{}, value)};
+            case CDB_DT_UNSIGNED_64:
+                return {std::visit(cast_visitor<uint64_t>{}, value)};
+            case CDB_DT_FLOAT_4:
+                return {std::visit(cast_visitor<float>{}, value)};
+            case CDB_DT_FLOAT_8:
+                return {std::visit(cast_visitor<double>{}, value)};
+            case CDB_DT_VOID:
+            default:
+                /* Must not happen */
+                return {};
+        }
+    }
+
+    inline value_t operator<<=(const value_t &value, data_type type) {
+        return cast_value_to(value, type);
+    }
+
+    template<typename T>
+    struct type_name
+    {
+        static const std::string& name();
+    };
+
+    template<> inline const std::string& type_name<bool>::name(){static std::string val{"bool"}; return val;}
+    template<> inline const std::string& type_name<int8_t>::name(){static std::string val{"int8"}; return val;}
+    template<> inline const std::string& type_name<uint8_t>::name(){static std::string val{"uint8"}; return val;}
+    template<> inline const std::string& type_name<int16_t>::name(){static std::string val{"int16"}; return val;}
+    template<> inline const std::string& type_name<uint16_t>::name(){static std::string val{"uint16"}; return val;}
+    template<> inline const std::string& type_name<int32_t>::name(){static std::string val{"int32"}; return val;}
+    template<> inline const std::string& type_name<uint32_t>::name(){static std::string val{"uint32"}; return val;}
+    template<> inline const std::string& type_name<int64_t>::name(){static std::string val{"int64"}; return val;}
+    template<> inline const std::string& type_name<uint64_t>::name(){static std::string val{"uint64"}; return val;}
+    template<> inline const std::string& type_name<float>::name(){static std::string val{"float"}; return val;}
+    template<> inline const std::string& type_name<double>::name(){static std::string val{"double"}; return val;}
+
+    namespace {
+        template<typename T>
+        std::string format_type_value(const T& value) {
+            std::ostringstream stm;
+            stm << "(" << (type_name<T>::name()) << ")" << value;
+            return stm.str();
+        }
+    }
+
+    struct dump_visitor
+    {
+        template<typename T>
+        std::string operator()(T val)const { return format_type_value<T>(val);}
+        std::string operator()(std::monostate)const { return "(void)";}
+    };
+
+    inline std::string dump(const value_t &value) {
+        return std::visit(dump_visitor{}, value);
+    }
+
+    /**
+     * Compare two values.
+     * Try to cast the second to the first's type.
+     */
+    inline bool equals(const cyclic::value_t& v1, const cyclic::value_t& v2) {
+        return v1 == cyclic::cast_value_to(v2, v1.type());
+    }
+
+    /**
+     * Strictly compare two values.
+     * Both type must be same
+     */
+    inline bool equals_strict(const cyclic::value_t& v1, const cyclic::value_t& v2) {
+        return v1 == v2;
+    }
+
 
 } // namespace cyclic
 #endif // _CYCLIC_COMMON_TYPE_HPP_

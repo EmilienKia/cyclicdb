@@ -24,6 +24,8 @@
 
 using namespace cyclicstore;
 
+namespace helpers = cyclic::parser::helpers;
+
 commands::command* parse_command(const std::string& command);
 
 

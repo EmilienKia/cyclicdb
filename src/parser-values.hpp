@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * src/store-parser-values.hpp
- * Copyright (C) 2017 Emilien Kia <emilien.kia@gmail.com>
+ * src/parser-values.hpp
+ * Copyright (C) 2017-2024 Emilien Kia <emilien.kia@gmail.com>
  *
  * cyclicdb/cyclicstore is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published by
@@ -25,12 +25,13 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/optional.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+//#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 
-namespace cyclicstore
+namespace cyclic
 {
 /**
- * Parsers for cyclicstore command line tool.
+ * Parsers for cyclic command line tools.
  */
 namespace parser
 {
@@ -78,5 +79,5 @@ struct value_parser : qi::grammar<Iterator, cyclic::value_t(), ascii::space_type
 
 
 
-}} // namespace cyclicstore::parser
-#endif // _CYCLIC_STORE_PARSER_VALUES_HPP_
+}} // namespace cyclic::parser
+#endif // _CYCLIC_PARSER_VALUES_HPP_

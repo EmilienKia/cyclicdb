@@ -20,6 +20,7 @@
 
 #include "libstore-file-impl.hpp"
 
+#include <array>
 #include <iostream>
 #include <sstream>
 
@@ -307,7 +308,7 @@ void file_table_impl::initialize_on_creation(const std::vector<field_st>& fields
     _record_header_size = _field_count > 0 ? (_field_count - 1) / 8 + 1 : 0;
 
     // Compute record size
-    // Enought space to save the record header and all fields.
+    // Enough space to save the record header and all fields.
     _record_size = _field_count * sizeof(uint64_t) + _record_header_size;
 
     // Compute table header size:

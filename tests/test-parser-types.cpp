@@ -1,6 +1,6 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
- * tests/test-store-parser-types.cpp
+ * tests/test-parser-types.cpp
  * Copyright (C) 2017-2019 Emilien Kia <emilien.kia@gmail.com>
  *
  * cyclicdb/tests are free software: you can redistribute them and/or
@@ -19,9 +19,9 @@
  */
 #include "catch.hpp"
 
-#include "store-parser-values.hpp"
+#include "parser-values.hpp"
 
-using namespace cyclicstore;
+using namespace cyclic;
 
 
 TEST_CASE("Parsing null", "[parser]")

@@ -56,10 +56,10 @@ struct table_impl_state_full_split_at_end;
 enum TABLE_STATE
 {
     TABLE_NO_RECORD = 0,
-    TABLE_ONE_RECORD_AT_BEGINING,
+    TABLE_ONE_RECORD_AT_BEGINNING,
     TABLE_ONE_RECORD_SOMEWHERE,
     TABLE_ONE_RECORD_AT_END,
-    TABLE_PARTIAL_CONTIGUOUS_AT_BEGINING,
+    TABLE_PARTIAL_CONTIGUOUS_AT_BEGINNING,
     TABLE_FULL_CONTIGUOUS,
     TABLE_PARTIAL_CONTIGUOUS_SOMEWHERE,
     TABLE_PARTIAL_CONTIGUOUS_AT_END,
@@ -118,7 +118,7 @@ class base_table_impl : public table
     friend struct table_impl_state_full_split_somewhere;
     friend struct table_impl_state_full_split_at_end;
 protected:
-    static table_impl_state* states[12];
+    static const table_impl_state* states[12];
 
     /** Capacity of table in record count.*/
     record_index_t _record_capacity;

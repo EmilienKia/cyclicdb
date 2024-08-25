@@ -37,7 +37,7 @@ void display_version()
 {
     std::cout
         << CYCLICSTORE_NAME << " " << PROJECT_VERSION << std::endl
-        << "Copyright (C) 2017 Emilien Kia <emilien.kia@gmail.com>" << std::endl
+        << "Copyright (C) 2017-2024 Emilien Kia <emilien.kia@gmail.com>" << std::endl
         << "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>." << std::endl
         << "This is free software: you are free to change and redistribute it." << std::endl
         << "There is NO WARRANTY, to the extent permitted by law." << std::endl
@@ -73,7 +73,7 @@ void display_help(po::options_description& options)
         << "  create (<colname> <coltype>[, ...]) capacity <maxrecordcount>" << std::endl
         << "          : Create a table with this specification." << std::endl
         << "  status  : Display usage status of table." << std::endl
-        << "  details : Diplay table details." << std::endl
+        << "  details : Display table details." << std::endl
         << "  dump    : Display all content of table (can be long, depends on table size)." << std::endl
         << options << std::endl;
 }
@@ -81,7 +81,6 @@ void display_help(po::options_description& options)
 int main(int argc, const char** argv)
 {
     std::vector<std::string> extras;
-
 
     po::options_description others("Other options");
     others.add_options()

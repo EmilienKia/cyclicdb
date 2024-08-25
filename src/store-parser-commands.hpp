@@ -23,13 +23,15 @@
 
 #include "common-base.hpp"
 
-#include "store-parser-values.hpp"
+#include "parser-values.hpp"
 #include "store-commands.hpp"
+
+#include "parser-common.hpp"
+#include "parser-helpers.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/optional.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-
 
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -52,76 +54,8 @@ namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
 namespace phoenix = boost::phoenix;
 
+namespace helpers = cyclic::parser::helpers;
 
-//
-// Grammars and symbols
-//
-
-
-struct types_ : qi::symbols<char, cyclic::data_type>
-{
-    types_()
-    {
-        add
-            ("b"   , cyclic::CDB_DT_BOOLEAN)
-            ("i8"  , cyclic::CDB_DT_SIGNED_8)
-            ("u8"  , cyclic::CDB_DT_UNSIGNED_8)
-            ("i16" , cyclic::CDB_DT_SIGNED_16)
-            ("u16" , cyclic::CDB_DT_UNSIGNED_16)
-            ("i32" , cyclic::CDB_DT_SIGNED_32)
-            ("u32" , cyclic::CDB_DT_UNSIGNED_32)
-            ("i64" , cyclic::CDB_DT_SIGNED_64)
-            ("u64" , cyclic::CDB_DT_UNSIGNED_64)
-            ("f4"  , cyclic::CDB_DT_FLOAT_4)
-            ("f8"  , cyclic::CDB_DT_FLOAT_8)
-
-            ("bool"   , cyclic::CDB_DT_BOOLEAN)
-            ("int8"   , cyclic::CDB_DT_SIGNED_8)
-            ("uint8"  , cyclic::CDB_DT_UNSIGNED_8)
-            ("int16"  , cyclic::CDB_DT_SIGNED_16)
-            ("uint16" , cyclic::CDB_DT_UNSIGNED_16)
-            ("int"    , cyclic::CDB_DT_SIGNED_32)
-            ("int32"  , cyclic::CDB_DT_SIGNED_32)
-            ("uint32" , cyclic::CDB_DT_UNSIGNED_32)
-            ("int64"  , cyclic::CDB_DT_SIGNED_64)
-            ("uint64" , cyclic::CDB_DT_UNSIGNED_64)
-            ("float4" , cyclic::CDB_DT_FLOAT_4)
-            ("float8" , cyclic::CDB_DT_FLOAT_8)
-
-            ("boolean" , cyclic::CDB_DT_BOOLEAN)
-            ("char"    , cyclic::CDB_DT_SIGNED_8)
-            ("byte"    , cyclic::CDB_DT_UNSIGNED_8)
-            ("short"   , cyclic::CDB_DT_SIGNED_16)
-            ("integer" , cyclic::CDB_DT_SIGNED_32)
-            ("long"    , cyclic::CDB_DT_SIGNED_64)
-            ("float"   , cyclic::CDB_DT_FLOAT_4)
-            ("double"  , cyclic::CDB_DT_FLOAT_8)
-        ;
-    }
-
-};
-
-inline void adapt_position_opt(helpers::position& res, boost::optional<helpers::position> opt_pos)
-{
-    if(opt_pos)
-    {
-        res = *opt_pos;
-    }
-    else
-    {
-        res = helpers::position{};
-    }
-}
-
-inline void adapt_position_index(helpers::position& res, cyclic::record_index_t index)
-{
-    res = helpers::position{index};
-}
-
-inline void adapt_position_time(helpers::position& res, cyclic::record_time_t time)
-{
-    res = helpers::position{time};
-}
 
 template <typename Iterator>
 struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_type>
@@ -151,8 +85,19 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
 
         start %= no_case[lit("start")] >> position;
         end   %= no_case[lit("end")] >> position;
-        opt_start = (-(start))[phoenix::bind(adapt_position_opt, _val, _1)];
-        opt_end   = (-(end))[phoenix::bind(adapt_position_opt, _val, _1)];
+        opt_start = (-(start))[phoenix::bind(cyclic::parser::helpers::adapt_position_opt, _val, _1)];
+        opt_end   = (-(end))[phoenix::bind(cyclic::parser::helpers::adapt_position_opt, _val, _1)];
+
+        values %= value % ',';
+
+        pos_index = (-(no_case[lit("index")]) >> ulong_)
+        [phoenix::bind(cyclic::parser::helpers::adapt_position_index, _val, _1)];
+        pos_time = (no_case[lit("time")] >> long_long)
+        [phoenix::bind(cyclic::parser::helpers::adapt_position_time, _val, _1)];
+        position %= pos_index | pos_time;
+
+        at %= (no_case[lit("at")] >> position);
+        opt_at = (-(at))[phoenix::bind(cyclic::parser::helpers::adapt_position_opt, _val, _1)];
 
         select = (no_case[lit("select")] >> (lit("*")|column_names) >> opt_start >> opt_end )
                 [_val = phoenix::new_<commands::select>(_1, _2, _3)];
@@ -166,17 +111,6 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
         field_descs %= field_desc % ',';
         create = (no_case[lit("create")] >> '(' >> field_descs >> ')' >> no_case[lit("capacity")] >> ulong_)
                 [_val = phoenix::new_<commands::create>(_1, _2)];
-
-        values %= value % ',';
-
-        pos_index = (-(no_case[lit("index")]) >> ulong_)
-                [phoenix::bind(adapt_position_index, _val, _1)];
-        pos_time = (no_case[lit("time")] >> long_long)
-                [phoenix::bind(adapt_position_time, _val, _1)];
-        position %= pos_index | pos_time;
-        
-        at %= (no_case[lit("at")] >> position);
-        opt_at = (-(at))[phoenix::bind(adapt_position_opt, _val, _1)];
 
         insert = (    no_case[lit("insert")] >> -('(' >> column_names >> ')')
                    >> no_case[lit("values")] >>  '(' >> values >> ')'
@@ -217,13 +151,12 @@ struct query_parser : qi::grammar<Iterator, commands::command*(), ascii::space_t
     qi::rule<Iterator, commands::command*(), ascii::space_type> status;
     qi::rule<Iterator, commands::command*(), ascii::space_type> details;
 
-    types_ type;
+    cyclic::parser::types_ type;
     qi::rule<Iterator, cyclic::field_st(), ascii::space_type> field_desc;
     qi::rule<Iterator, std::vector<cyclic::field_st>(), ascii::space_type> field_descs;
     qi::rule<Iterator, commands::command*(), ascii::space_type> create;
 
-
-    value_parser<Iterator> value;
+    cyclic::parser::value_parser<Iterator> value;
     qi::rule<Iterator, std::vector<cyclic::value_t>(), ascii::space_type> values;
 
     qi::rule<Iterator, helpers::position(), ascii::space_type> position;

@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package cyclic.proto;
+
+//
+// Global structures
+//
+
+/** Error management. */
+message Error {
+  uint32 id = 1;
+  Context context = 2;
+
+  message Context {
+    string message = 1;
+    map<string, ContextParam> params = 2;
+  }
+
+  message ContextParam {
+    oneof param {
+      string string = 1;
+      bool   boolean = 2;
+      int32  int32 = 3;
+      uint32 uint32 = 4;
+      float  float = 5;
+      double double = 6;
+      Context context = 7;
+    }
+  }
+}
+
+//
+// Shared common types and messages
+//
+enum data_type {
+    CDB_DT_UNSPECIFIED = 0;
+    CDB_DT_VOID = 1;
+    CDB_DT_BOOLEAN = 2;
+    CDB_DT_SIGNED_8 = 3;
+    CDB_DT_UNSIGNED_8 = 4;
+    CDB_DT_SIGNED_16 = 5;
+    CDB_DT_UNSIGNED_16 = 6;
+    CDB_DT_SIGNED_32 = 7;
+    CDB_DT_UNSIGNED_32 = 8;
+    CDB_DT_SIGNED_64 = 9;
+    CDB_DT_UNSIGNED_64 = 10;
+    CDB_DT_FLOAT_4 = 11;
+    CDB_DT_FLOAT_8 = 12;
+}
+
+message DataValue {
+  oneof value {
+    bool boolean = 2;
+    int32 int8 = 3;
+    uint32 uint8 = 4;
+    int32 int16 = 5;
+    uint32 uint16 = 6;
+    int32 int32 = 7;
+    uint32 uint32 = 8;
+    int64 int64 = 9;
+    uint64 uint64 = 10;
+    float float = 11;
+    double double = 12;
+  }
+}
+
+message FieldDefinition {
+  uint32 index = 1;
+  string name = 2;
+  data_type type = 3;
+}
+
+message Record {
+  optional uint32 record_index = 1;
+  optional uint64 record_time = 2;
+  map<uint32, DataValue> values = 3;
+}
+
+//
+// Service requests
+//
+
+message ServiceStatusResponse {
+  string status = 1;
+}
+
+//
+// Database requests
+//
+
+message ListDatabasesResponse {
+  repeated string databases = 1;
+}
+
+
+message GetDatabaseResponse {
+  string name = 1;
+}
+
+message CreateDatabaseRequest {
+  string name = 1;
+}
+
+message CreateDatabaseResponse {
+  string name = 1;
+}
+
+//
+// Timeseries requests
+//
+
+message ListTimeseriesResponse {
+  repeated string timeseries = 1;
+}
+
+message CreateTimeseriesRequest {
+  string name = 1;
+  repeated ColumnDefinition columns = 2;
+  uint32 capacity = 3;
+  optional uint64 origin = 4;
+  optional uint64 duration = 5;
+
+  message ColumnDefinition {
+    string name = 1;
+    data_type type = 2;
+  }
+}
+
+message CreateTimeseriesResponse {
+  string name = 1;
+}
+
+message GetTimeseriesResponse {
+  string name = 1;
+
+  uint32 field_count = 2;
+  repeated FieldDefinition fields = 3;
+
+  uint32 record_capacity = 4;
+  int64  record_origin = 5;
+  int64  record_duration = 6;
+
+  uint32 record_count = 7;
+
+  optional uint32 min_index = 8;
+  optional uint32 max_index = 9;
+}
+
+message GetTimeseriesDataResponse {
+  string name = 1;
+
+  uint32 field_count = 2;
+  repeated FieldDefinition fields = 3;
+
+  uint32 record_count = 4;
+  repeated Record records = 5;
+}
+
+
+message SetTimeseriesDataRequest {
+  map<uint32, string> fields = 1;
+
+  repeated Record records = 2;
+}
+
+message SetTimeseriesDataResponse {
+  string name = 1;
+}
+

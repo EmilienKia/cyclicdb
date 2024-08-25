@@ -7,7 +7,12 @@ project(cyclicdb VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(PkgConfig)
+pkg_check_modules(Pistache REQUIRED IMPORTED_TARGET libpistache)
+
 find_package(Boost REQUIRED COMPONENTS program_options)
+
+find_package(Protobuf REQUIRED)
 
 add_subdirectory(src)
 

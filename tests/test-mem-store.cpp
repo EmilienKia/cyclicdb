@@ -73,7 +73,7 @@ TEST_CASE("Memory storage", "[memory]") {
 
     INFO( "Test 5int32 field" )
     const cyclic::field& field = table->field("5int32");
-    REQUIRE( &field != nullptr );
+//    REQUIRE( &field != nullptr );
     REQUIRE( field.index() == 5 );
     REQUIRE( field.name() == "5int32" );
     REQUIRE( field.type() == cyclic::CDB_DT_SIGNED_32 );

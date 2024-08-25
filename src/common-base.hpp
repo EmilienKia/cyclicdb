@@ -735,6 +735,8 @@ namespace cyclic
     /* abstract */ class table : public recordset
     {
     public:
+        virtual ~table() = default;
+
         /**
          * Return the capacity of table, in number of records.
          * The capacity is the maximum number of records a table can store at the same time.
@@ -1000,6 +1002,8 @@ namespace cyclic
          * @throw cyclic::time_not_supported When time is not supported by the table.
          */
         virtual void insert_record(record_time_t time, const record& rec) =0;
+
+        
     };
 
 } // namespace cyclic

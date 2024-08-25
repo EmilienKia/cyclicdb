@@ -306,14 +306,16 @@ value_t& raw_record::get(const std::string& field_name)
 
 mutable_record& raw_record::set(field_index_t field, value_t value)
 {
-    ensure(field+1);
-    _values[field] = value;
+    ensure(field);
+    _values[field] = _recordset ? cast_value_to(value, this->field(field).type()) : value;
     return *this;
 }
 
 mutable_record& raw_record::set(const std::string& field_name, value_t value)
 {
-    field_index_t index = field(field_name).index();
+    const cyclic::field& f = field(field_name);
+    field_index_t index = f.index();
+    data_type type = f.type();
     if(index>=_values.size())
     {
         throw cyclic::unknown_field{};
@@ -321,7 +323,7 @@ mutable_record& raw_record::set(const std::string& field_name, value_t value)
     else
     {
         ensure(index+1);
-        _values[index] = value;
+        _values[index] = _recordset ? cast_value_to(value, type) : value;
     }
     return *this;
 }
