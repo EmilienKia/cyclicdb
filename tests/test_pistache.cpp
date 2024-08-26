@@ -1,4 +1,22 @@
-
+/* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
+/*
+ * tests/test-pistache.cpp
+ * Copyright (C) 2024 Emilien Kia <emilien.kia@gmail.com>
+ *
+ * cyclicdb is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1 of the License,
+ * or (at your option) any later version.
+ *
+ * cyclicdb is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the COPYING file at the root of the source distribution for more details.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <pistache/endpoint.h>
 #include <pistache/http.h>
 #include <pistache/mime.h>
@@ -15,15 +33,15 @@
 
 
 #include "cyclicdb.pb.h"
-#include "cyclicdb-messages.hpp"
+#include "common/cyclicdb-messages.hpp"
 
 #include <google/protobuf/util/json_util.h>
 
-#include "cyclicdb-client-http.hpp"
+#include "client/cyclicdb-client-http.hpp"
 
-#include "cyclicdb-proto-serial.hpp"
+#include "common/cyclicdb-proto-serial.hpp"
 
-#include "cyclicdb-service.hpp"
+#include "server/cyclicdb-service.hpp"
 
 #define DEFAULT_PORT "9081"
 

@@ -9,7 +9,7 @@ add_executable(utest
         test-simple-store.cpp
         test-parser-types.cpp
         test-store-parser-commands.cpp
-        ../src/store-commands.cpp
+        ../src/store/store-commands.cpp
         test-server.cpp
 )
 

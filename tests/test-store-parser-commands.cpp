@@ -3,24 +3,24 @@
  * tests/test-store-parser-types.cpp
  * Copyright (C) 2017-2019 Emilien Kia <emilien.kia@gmail.com>
  *
- * cyclicdb/tests are free software: you can redistribute them and/or
- * modify them under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or (at your
- * option) any later version.
+ * cyclicdb is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1 of the License,
+ * or (at your option) any later version.
  *
  * cyclicdb is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the COPYING file at the root of the source distribution for more details.
- * See the GNU General Public License for more details.
+ * See the GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "catch.hpp"
 
-#include "store-commands.hpp"
-#include "store-parser-commands.hpp"
+#include "store/store-commands.hpp"
+#include "store/store-parser-commands.hpp"
 
 using namespace cyclicstore;
 

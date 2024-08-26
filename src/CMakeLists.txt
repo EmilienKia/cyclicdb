@@ -1,28 +1,28 @@
 
 
 add_library(cyclicstore SHARED
-        common-type.hpp
-        common-base.hpp
-        common-base.cpp
-        common-file.hpp
-        common-file.cpp
-        libstore.hpp
-        libstore.cpp
-        libstore-base-impl.hpp
-        libstore-base-impl.cpp
-        libstore-mem-impl.hpp
-        libstore-mem-impl.cpp
-        libstore-file-impl.hpp
-        libstore-file-impl.cpp
+        common/common-type.hpp
+        common/common-base.hpp
+        common/common-base.cpp
+        common/common-file.hpp
+        common/common-file.cpp
+        store/libstore.hpp
+        store/libstore.cpp
+        store/libstore-base-impl.hpp
+        store/libstore-base-impl.cpp
+        store/libstore-mem-impl.hpp
+        store/libstore-mem-impl.cpp
+        store/libstore-file-impl.hpp
+        store/libstore-file-impl.cpp
     )
 
 #target_link_libraries(cyclicstore Boost::program_options)
 install(TARGETS cyclicstore LIBRARY DESTINATION lib)
 
 install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/common-type.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/common-base.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/libstore.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/common/common-type.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/common/common-base.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/store/libstore.hpp
         DESTINATION include/cyclicdb
         )
 
@@ -32,11 +32,11 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cyclicstore.pc DESTINATION lib/pkgconf
 
 
 add_executable(cyclicstore-cli
-        parser-values.hpp
-        store-parser-commands.hpp
-        store-commands.hpp
-        store-commands.cpp
-        store.cpp
+        common/parser-values.hpp
+        store/store-parser-commands.hpp
+        store/store-commands.hpp
+        store/store-commands.cpp
+        store/store.cpp
     )
 
 target_link_libraries(cyclicstore-cli cyclicstore Boost::program_options)
@@ -57,27 +57,27 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS DESCRIPTORS
 
 add_library(cyclicdb-common SHARED
         ${PROTO_SRCS} ${PROTO_HDRS}
-        cyclicdb-proto-serial.cpp
+        common/cyclicdb-proto-serial.cpp
 )
 
 
 
 
 add_library(cyclicdbsrv SHARED
-        common-type.hpp
-        cyclicdb-service.cpp
-        cyclicdb-service.hpp
-        cyclicdbd-server.cpp
-        cyclicdbd-server.hpp
-        cyclicdbd-server-http.cpp
-        cyclicdbd-server-http.hpp
+        common/common-type.hpp
+        server/cyclicdb-service.cpp
+        server/cyclicdb-service.hpp
+        server/cyclicdbd-server.cpp
+        server/cyclicdbd-server.hpp
+        server/cyclicdbd-server-http.cpp
+        server/cyclicdbd-server-http.hpp
 )
 target_link_libraries(cyclicdbsrv cyclicstore cyclicdb-common)
 
 
 
 add_executable(cyclicdbd
-        cyclicdbd.cpp
+        server/cyclicdbd.cpp
 )
 target_link_libraries(cyclicdbd
         cyclicstore cyclicdbsrv cyclicdb-common
@@ -87,21 +87,25 @@ target_link_libraries(cyclicdbd
 
 
 add_library(cyclicdb-client SHARED
-        common-type.hpp
-        common-base.hpp
-        common-base.cpp
-        cyclicdb-client.hpp
-        cyclicdb-client.cpp
-        cyclicdb-client-http.hpp
-        cyclicdb-client-http.cpp
+        common/common-type.hpp
+        common/common-base.hpp
+        common/common-base.cpp
+        store/libstore-base-impl.hpp
+        store/libstore-base-impl.cpp
+        store/libstore-mem-impl.hpp
+        store/libstore-mem-impl.cpp
+        client/cyclicdb-client.hpp
+        client/cyclicdb-client.cpp
+        client/cyclicdb-client-http.hpp
+        client/cyclicdb-client-http.cpp
 )
 target_link_libraries(cyclicdb-client cyclicdb-common)
 
 
 add_executable(cyclicdb
-        cyclicdb-cli.cpp
-        client-commands.cpp
-        client-commands.hpp
+        client/cyclicdb-cli.cpp
+        client/client-commands.cpp
+        client/client-commands.hpp
 )
 target_link_libraries(cyclicdb
         cyclicdb-client cyclicdb-common
